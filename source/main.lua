@@ -73,7 +73,7 @@ function pd.update()
 
 	UpdateTipPosition()
 	gfx.lockFocus(canvas)
-	gfx.setLineWidth(5)
+	gfx.setLineWidth(math.random(2, 3))
 	gfx.setLineCapStyle(gfx.kLineCapStyleRound)
 	gfx.drawLine(previousX, previousY, x, y)
 	gfx.unlockFocus()
