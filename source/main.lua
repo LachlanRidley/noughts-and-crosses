@@ -6,84 +6,96 @@ import "CoreLibs/timer"
 local SCREEN_WIDTH = 400
 local SCREEN_HEIGHT = 240
 
-local SPEED = 5
-
-local mode = "drawing"
-
-local x = SCREEN_WIDTH / 2
-local y = SCREEN_HEIGHT / 2
+local SPEED = 10
 
 local pd <const> = playdate
 local gfx <const> = pd.graphics
 local snd <const> = pd.sound
 local timer <const> = pd.timer
 
-local tip
+local goalX
+local goalY
+local x
+local y
+
 local canvas
 
-function Setup()
-	-- setup pencil tip
-	tip = gfx.sprite.new()
-	tip:setSize(6, 6)
-	function tip:draw()
-		gfx.fillCircleAtPoint(3, 3, 3)
-	end
+local plan = coroutine.create(function()
+	x = 160
+	y = 21
 
-	tip:moveTo(x, y)
-	tip:add()
+	goalX = 156
+	goalY = 187
+
+	coroutine.yield()
+
+	x = 231
+	y = 19
+	goalX = 225
+	goalY = 190
+
+	coroutine.yield()
+
+	x = 96
+	y = 74
+	goalX = 291
+	goalY = 76
+
+	coroutine.yield()
+
+	x = 95
+	y = 135
+	goalX = 293
+	goalY = 138
+end)
+
+function Setup()
+	-- set the game up
+	pd.display.setRefreshRate(30)
 
 	-- setup canvas
 	canvas = gfx.image.new(SCREEN_WIDTH, SCREEN_HEIGHT)
+
+	-- get the start of the plan
+	coroutine.resume(plan)
 end
 
 Setup()
 
-function LoadGame()
-	pd.display.setRefreshRate(30)
-	gfx.setBackgroundColor(gfx.kColorWhite)
-	gfx.clear()
-end
-
 function pd.update()
-	previousX = x
-	previousY = y
+	local previousX = x
+	local previousY = y
 
-	if pd.buttonIsPressed(pd.kButtonLeft) then
-		x -= SPEED
-	end
-	if pd.buttonIsPressed(pd.kButtonRight) then
-		x += SPEED
-	end
-	if pd.buttonIsPressed(pd.kButtonUp) then
-		y -= SPEED
-	end
-	if pd.buttonIsPressed(pd.kButtonDown) then
-		y += SPEED
-	end
-
-	if pd.buttonJustPressed(pd.kButtonA) or pd.buttonJustPressed(pd.kButtonB) then
-		if mode == "drawing" then
-			mode = "erasing"
-		elseif mode == "erasing" then
-			mode = "drawing"
-		end
-	end
-
-	-- if mode == "drawing" then
+	UpdateTipPosition()
 	gfx.lockFocus(canvas)
 	gfx.setLineWidth(5)
 	gfx.setLineCapStyle(gfx.kLineCapStyleRound)
 	gfx.drawLine(previousX, previousY, x, y)
 	gfx.unlockFocus()
 
-	-- gfx.fillCircleAtPoint(x, y, 3)
-	-- elseif mode == "erasing" then
-	-- 	gfx.drawCircleAtPoint(x, y, 3)
-	-- end
-
-	tip:moveTo(x, y)
+	if Distance(x, y, goalX, goalY) < SPEED + 1 then
+		coroutine.resume(plan)
+	end
 
 	canvas:draw(0, 0)
 	-- gfx.sprite.update()
 	-- timer.updateTimers()
+end
+
+function UpdateTipPosition()
+	local initialPositionVector = pd.geometry.vector2D.new(x, y)
+	local goalVector = pd.geometry.vector2D.new(goalX, goalY)
+
+	local movementVector = goalVector - initialPositionVector
+	movementVector:normalize()
+	movementVector *= SPEED
+
+	x += movementVector.dx
+	y += movementVector.dy
+end
+
+function Distance(x1, y1, x2, y2)
+	local dx = x1 - x2
+	local dy = y1 - y2
+	return math.sqrt(dx * dx + dy * dy)
 end
