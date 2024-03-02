@@ -17,15 +17,17 @@ local goalX
 local goalY
 local x
 local y
+local pencilAnimator
 
 local canvas
 
-local plan = coroutine.create(function()
+function DrawBoard()
 	x = 160
 	y = 21
 
 	goalX = 156
 	goalY = 187
+	SetupAnimator()
 
 	coroutine.yield()
 
@@ -33,6 +35,7 @@ local plan = coroutine.create(function()
 	y = 19
 	goalX = 225
 	goalY = 190
+	SetupAnimator()
 
 	coroutine.yield()
 
@@ -40,6 +43,7 @@ local plan = coroutine.create(function()
 	y = 74
 	goalX = 291
 	goalY = 76
+	SetupAnimator()
 
 	coroutine.yield()
 
@@ -47,7 +51,10 @@ local plan = coroutine.create(function()
 	y = 135
 	goalX = 293
 	goalY = 138
-end)
+	SetupAnimator()
+end
+
+local plan;
 
 function Setup()
 	-- set the game up
@@ -56,11 +63,9 @@ function Setup()
 	-- setup canvas
 	canvas = gfx.image.new(SCREEN_WIDTH, SCREEN_HEIGHT)
 
-	-- get the start of the plan
+	plan = coroutine.create(DrawBoard)
 	coroutine.resume(plan)
 end
-
-Setup()
 
 function pd.update()
 	local previousX = x
@@ -73,8 +78,9 @@ function pd.update()
 	gfx.drawLine(previousX, previousY, x, y)
 	gfx.unlockFocus()
 
-	if Distance(x, y, goalX, goalY) < SPEED + 1 then
+	if GoalReached() then
 		coroutine.resume(plan)
+		SetupAnimator()
 	end
 
 	canvas:draw(0, 0)
@@ -82,20 +88,21 @@ function pd.update()
 	-- timer.updateTimers()
 end
 
+function SetupAnimator()
+	local initialPoint = pd.geometry.point.new(x, y)
+	local goalPoint = pd.geometry.point.new(goalX, goalY)
+
+	pencilAnimator = gfx.animator.new(500, initialPoint, goalPoint, pd.easingFunctions.inOutQuint)
+end
+
 function UpdateTipPosition()
-	local initialPositionVector = pd.geometry.vector2D.new(x, y)
-	local goalVector = pd.geometry.vector2D.new(goalX, goalY)
-
-	local movementVector = goalVector - initialPositionVector
-	movementVector:normalize()
-	movementVector *= SPEED
-
-	x += movementVector.dx
-	y += movementVector.dy
+	local nextPoint = pencilAnimator:currentValue();
+	x = nextPoint.x;
+	y = nextPoint.y;
 end
 
-function Distance(x1, y1, x2, y2)
-	local dx = x1 - x2
-	local dy = y1 - y2
-	return math.sqrt(dx * dx + dy * dy)
+function GoalReached()
+	return pencilAnimator:ended()
 end
+
+Setup()
