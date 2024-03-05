@@ -67,7 +67,7 @@ local cursor
 
 function Setup()
 	-- set the game up
-	pd.display.setRefreshRate(30)
+	pd.display.setRefreshRate(50)
 
 	-- setup canvas
 	canvas = gfx.image.new(SCREEN_WIDTH, SCREEN_HEIGHT)
