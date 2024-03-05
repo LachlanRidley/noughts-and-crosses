@@ -6,8 +6,6 @@ import "CoreLibs/timer"
 local SCREEN_WIDTH = 400
 local SCREEN_HEIGHT = 240
 
-local SPEED = 10
-
 local pd <const> = playdate
 local gfx <const> = pd.graphics
 local snd <const> = pd.sound
@@ -23,7 +21,7 @@ local highlightedX = 1
 local highlightedY = 1
 
 local canvas
-local boardDrawn = false
+local playerCanInteract = false
 
 function DrawBoard()
 	x = 160
@@ -59,7 +57,30 @@ function DrawBoard()
 
 	coroutine.yield()
 
-	boardDrawn = true
+	playerCanInteract = true
+end
+
+function DrawCross()
+	playerCanInteract = false
+
+	local centre = GetCursorPosition()
+
+	x = centre.x - 17
+	y = centre.y - 24
+	goalX = centre.x + 15
+	goalY = centre.y + 21
+	SetupAnimator()
+
+	coroutine.yield()
+
+	x = centre.x - 22
+	y = centre.y + 22
+	goalX = centre.x + 18
+	goalY = centre.y - 18
+	SetupAnimator()
+
+	coroutine.yield()
+	playerCanInteract = true
 end
 
 local plan
@@ -108,29 +129,40 @@ function pd.update()
 		SetupAnimator()
 	end
 
-	if pd.buttonJustPressed(pd.kButtonUp) then
-		highlightedY = math.max(highlightedY - 1, 0)
-	end
-	if pd.buttonJustPressed(pd.kButtonDown) then
-		highlightedY = math.min(highlightedY + 1, 2)
-	end
-	if pd.buttonJustPressed(pd.kButtonLeft) then
-		highlightedX = math.max(highlightedX - 1, 0)
-	end
-	if pd.buttonJustPressed(pd.kButtonRight) then
-		highlightedX = math.min(highlightedX + 1, 2)
-	end
+	if playerCanInteract then
+		if pd.buttonJustPressed(pd.kButtonUp) then
+			highlightedY = math.max(highlightedY - 1, 0)
+		end
+		if pd.buttonJustPressed(pd.kButtonDown) then
+			highlightedY = math.min(highlightedY + 1, 2)
+		end
+		if pd.buttonJustPressed(pd.kButtonLeft) then
+			highlightedX = math.max(highlightedX - 1, 0)
+		end
+		if pd.buttonJustPressed(pd.kButtonRight) then
+			highlightedX = math.min(highlightedX + 1, 2)
+		end
 
+		if pd.buttonJustPressed(pd.kButtonA) then
+			plan = coroutine.create(DrawCross)
+		end
 
-	if boardDrawn then
-		local cursorX = 125 + highlightedX * 70
-		local cursorY = 45 + highlightedY * 60
+		cursor:setVisible(true)
 
-		cursor:moveTo(cursorX, cursorY)
+		cursor:moveTo(GetCursorPosition())
+	else
+		cursor:setVisible(false)
 	end
 
 	gfx.sprite.update()
 	timer.updateTimers()
+end
+
+function GetCursorPosition()
+	local cursorX = 125 + highlightedX * 70
+	local cursorY = 45 + highlightedY * 60
+
+	return pd.geometry.point.new(cursorX, cursorY)
 end
 
 function SetupAnimator()
