@@ -19,7 +19,11 @@ local x
 local y
 local pencilAnimator
 
+local highlightedX = 1
+local highlightedY = 1
+
 local canvas
+local boardDrawn = false
 
 function DrawBoard()
 	x = 160
@@ -52,9 +56,14 @@ function DrawBoard()
 	goalX = 293
 	goalY = 138
 	SetupAnimator()
+
+	coroutine.yield()
+
+	boardDrawn = true
 end
 
-local plan;
+local plan
+local cursor
 
 function Setup()
 	-- set the game up
@@ -62,6 +71,15 @@ function Setup()
 
 	-- setup canvas
 	canvas = gfx.image.new(SCREEN_WIDTH, SCREEN_HEIGHT)
+
+	cursor = gfx.sprite.new()
+	local r = 5
+	cursor:setSize(r * 2, r * 2)
+	function cursor:draw()
+		gfx.drawCircleAtPoint(r, r, r)
+	end
+
+	cursor:add()
 
 	plan = coroutine.create(DrawBoard)
 	coroutine.resume(plan)
@@ -90,6 +108,26 @@ function pd.update()
 		SetupAnimator()
 	end
 
+	if pd.buttonJustPressed(pd.kButtonUp) then
+		highlightedY = math.max(highlightedY - 1, 0)
+	end
+	if pd.buttonJustPressed(pd.kButtonDown) then
+		highlightedY = math.min(highlightedY + 1, 2)
+	end
+	if pd.buttonJustPressed(pd.kButtonLeft) then
+		highlightedX = math.max(highlightedX - 1, 0)
+	end
+	if pd.buttonJustPressed(pd.kButtonRight) then
+		highlightedX = math.min(highlightedX + 1, 2)
+	end
+
+
+	if boardDrawn then
+		local cursorX = 125 + highlightedX * 70
+		local cursorY = 45 + highlightedY * 60
+
+		cursor:moveTo(cursorX, cursorY)
+	end
 
 	gfx.sprite.update()
 	timer.updateTimers()
