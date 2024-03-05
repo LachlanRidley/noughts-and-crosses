@@ -65,6 +65,12 @@ function Setup()
 
 	plan = coroutine.create(DrawBoard)
 	coroutine.resume(plan)
+
+	gfx.sprite.setBackgroundDrawingCallback(
+		function()
+			canvas:draw(0, 0)
+		end
+	)
 end
 
 function pd.update()
@@ -72,6 +78,7 @@ function pd.update()
 	local previousY = y
 
 	UpdateTipPosition()
+	gfx.sprite.redrawBackground()
 	gfx.lockFocus(canvas)
 	gfx.setLineWidth(math.random(2, 3))
 	gfx.setLineCapStyle(gfx.kLineCapStyleRound)
@@ -83,9 +90,9 @@ function pd.update()
 		SetupAnimator()
 	end
 
-	canvas:draw(0, 0)
-	-- gfx.sprite.update()
-	-- timer.updateTimers()
+
+	gfx.sprite.update()
+	timer.updateTimers()
 end
 
 function SetupAnimator()
