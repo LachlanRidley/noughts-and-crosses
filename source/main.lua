@@ -3,8 +3,10 @@ import "CoreLibs/graphics"
 import "CoreLibs/sprites"
 import "CoreLibs/timer"
 
-local SCREEN_WIDTH = 400
-local SCREEN_HEIGHT = 240
+local SCREEN_WIDTH <const> = 400
+local SCREEN_HEIGHT <const> = 240
+
+local NOUGHT_RADIUS <const> = 20
 
 local pd <const> = playdate
 local gfx <const> = pd.graphics
@@ -20,10 +22,14 @@ local pencilAnimator
 local highlightedX = 1
 local highlightedY = 1
 
+local penThickness = 2
+
 local canvas
 local playerCanInteract = false
+local crossTurn = true
 
 function DrawBoard()
+	penThickness = 2
 	x = 160
 	y = 21
 
@@ -60,7 +66,23 @@ function DrawBoard()
 	playerCanInteract = true
 end
 
+function DrawNought()
+	penThickness = 5
+	playerCanInteract = false
+
+	local centre = GetCursorPosition()
+	x = centre.x
+	y = centre.y - NOUGHT_RADIUS
+
+	SetupAnimatorCircle()
+
+	coroutine.yield()
+
+	playerCanInteract = true
+end
+
 function DrawCross()
+	penThickness = 5
 	playerCanInteract = false
 
 	local centre = GetCursorPosition()
@@ -119,14 +141,13 @@ function pd.update()
 	UpdateTipPosition()
 	gfx.sprite.redrawBackground()
 	gfx.lockFocus(canvas)
-	gfx.setLineWidth(math.random(2, 3))
+	gfx.setLineWidth(math.random(penThickness, penThickness + 1))
 	gfx.setLineCapStyle(gfx.kLineCapStyleRound)
 	gfx.drawLine(previousX, previousY, x, y)
 	gfx.unlockFocus()
 
 	if GoalReached() then
 		coroutine.resume(plan)
-		SetupAnimator()
 	end
 
 	if playerCanInteract then
@@ -144,7 +165,13 @@ function pd.update()
 		end
 
 		if pd.buttonJustPressed(pd.kButtonA) then
-			plan = coroutine.create(DrawCross)
+			if crossTurn then
+				plan = coroutine.create(DrawCross)
+			else
+				plan = coroutine.create(DrawNought)
+			end
+
+			crossTurn = not crossTurn
 		end
 
 		cursor:setVisible(true)
@@ -172,8 +199,19 @@ function SetupAnimator()
 	pencilAnimator = gfx.animator.new(500, initialPoint, goalPoint, pd.easingFunctions.inOutQuint)
 end
 
+function SetupAnimatorCircle()
+	local path = pd.geometry.arc.new(x, y + NOUGHT_RADIUS, NOUGHT_RADIUS, 0, 360)
+
+	pencilAnimator = gfx.animator.new(1000, path, pd.easingFunctions.inOutQuint)
+end
+
 function UpdateTipPosition()
+	if pencilAnimator:ended() then
+		return
+	end
+
 	local nextPoint = pencilAnimator:currentValue();
+	print(nextPoint)
 	x = nextPoint.x;
 	y = nextPoint.y;
 end
