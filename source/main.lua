@@ -91,6 +91,31 @@ function DrawCross()
 	playerCanInteract = true
 end
 
+function DrawWinningLine(location)
+	playerCanInteract = false
+	penThickness = 8
+
+	if location == "row1" then
+		DrawLine(89, 46, 301, 48)
+	elseif location == "row2" then
+		DrawLine(87, 104, 306, 105)
+	elseif location == "row3" then
+		DrawLine(85, 164, 298, 168)
+	elseif location == "col1" then
+		DrawLine(121, 15, 122, 191)
+	elseif location == "col2" then
+		DrawLine(196, 16, 191, 193)
+	elseif location == "col3" then
+		DrawLine(265, 15, 260, 193)
+	elseif location == "tl-to-br" then
+		DrawLine(103, 22, 285, 192)
+	elseif location == "bl-to-tr" then
+		DrawLine(94, 187, 289, 23)
+	end
+
+	coroutine.yield()
+end
+
 local cursor
 local board
 
@@ -140,6 +165,39 @@ function pd.update()
 
 	if GoalReached() then
 		coroutine.resume(pencilAction)
+		if playerCanInteract then
+			for col = 1, 3, 1 do
+				local crossCount = 0
+				for row = 1, 3, 1 do
+					if board[col][row] == "x" then
+						crossCount += 1
+					end
+				end
+				if crossCount == 3 then
+					DrawWinningLine("col" .. tostring(col))
+				end
+			end
+
+			for row = 1, 3, 1 do
+				local crossCount = 0
+				for col = 1, 3, 1 do
+					if board[col][row] == "x" then
+						crossCount += 1
+					end
+				end
+				if crossCount == 3 then
+					DrawWinningLine("row" .. tostring(row))
+				end
+			end
+
+			if board[1][1] == "x" and board[2][2] == "x" and board[3][3] == "x" then
+				DrawWinningLine("tl-to-br")
+			end
+
+			if board[1][3] == "x" and board[2][2] == "x" and board[3][1] == "x" then
+				DrawWinningLine("bl-to-tr")
+			end
+		end
 	end
 
 	if playerCanInteract then
@@ -163,38 +221,6 @@ function pd.update()
 			else
 				board[highlightedX][highlightedY] = "o"
 				pencilAction = coroutine.create(DrawNought)
-			end
-
-			if board[1][1] == "x" and board[1][2] == "x" and board[1][3] == "x" then
-				print("x wins!")
-			end
-			if board[2][1] == "x" and board[2][2] == "x" and board[2][3] == "x" then
-				print("x wins!")
-			end
-			if board[3][1] == "x" and board[3][2] == "x" and board[3][3] == "x" then
-				print("x wins!")
-			end
-			if board[1][1] == "x" and board[2][2] == "x" and board[3][3] == "x" then
-				print("x wins!")
-			end
-			if board[1][3] == "x" and board[2][2] == "x" and board[3][1] == "x" then
-				print("x wins!")
-			end
-
-			if board[1][1] == "o" and board[1][2] == "o" and board[1][3] == "o" then
-				print("x wins!")
-			end
-			if board[2][1] == "o" and board[2][2] == "o" and board[2][3] == "o" then
-				print("x wins!")
-			end
-			if board[3][1] == "o" and board[3][2] == "o" and board[3][3] == "o" then
-				print("x wins!")
-			end
-			if board[1][1] == "o" and board[2][2] == "o" and board[3][3] == "o" then
-				print("x wins!")
-			end
-			if board[1][3] == "o" and board[2][2] == "o" and board[3][1] == "o" then
-				print("x wins!")
 			end
 
 			crossTurn = not crossTurn
