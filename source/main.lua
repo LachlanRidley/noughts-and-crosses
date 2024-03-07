@@ -13,11 +13,10 @@ local gfx <const> = pd.graphics
 local snd <const> = pd.sound
 local timer <const> = pd.timer
 
-local goalX
-local goalY
-local x
-local y
+local pencilX
+local pencilY
 local pencilAnimator
+local pencilAction
 
 local highlightedX = 1
 local highlightedY = 1
@@ -28,39 +27,38 @@ local canvas
 local playerCanInteract = false
 local crossTurn = true
 
+function DrawLine(x1, y1, x2, y2)
+	pencilX = x1
+	pencilY = y1
+
+	local initialPoint = pd.geometry.point.new(x1, y1)
+	local goalPoint = pd.geometry.point.new(x2, y2)
+
+	pencilAnimator = gfx.animator.new(500, initialPoint, goalPoint, pd.easingFunctions.inOutQuint)
+end
+
+function DrawCircle(centre, r)
+	pencilX = centre.x
+	pencilY = centre.y - r
+
+	local path = pd.geometry.arc.new(centre.x, centre.y, r, 0, 360)
+
+	pencilAnimator = gfx.animator.new(1000, path, pd.easingFunctions.inOutQuint)
+end
+
 function DrawBoard()
-	penThickness = 2
-	x = 160
-	y = 21
+	playerCanInteract = false
 
-	goalX = 156
-	goalY = 187
-	SetupAnimator()
-
+	DrawLine(160, 21, 156, 187)
 	coroutine.yield()
 
-	x = 231
-	y = 19
-	goalX = 225
-	goalY = 190
-	SetupAnimator()
-
+	DrawLine(231, 19, 225, 190)
 	coroutine.yield()
 
-	x = 96
-	y = 74
-	goalX = 291
-	goalY = 76
-	SetupAnimator()
-
+	DrawLine(96, 74, 291, 76)
 	coroutine.yield()
 
-	x = 95
-	y = 135
-	goalX = 293
-	goalY = 138
-	SetupAnimator()
-
+	DrawLine(95, 135, 293, 138)
 	coroutine.yield()
 
 	playerCanInteract = true
@@ -71,11 +69,8 @@ function DrawNought()
 	playerCanInteract = false
 
 	local centre = GetCursorPosition()
-	x = centre.x
-	y = centre.y - NOUGHT_RADIUS
 
-	SetupAnimatorCircle()
-
+	DrawCircle(centre, NOUGHT_RADIUS)
 	coroutine.yield()
 
 	playerCanInteract = true
@@ -87,25 +82,15 @@ function DrawCross()
 
 	local centre = GetCursorPosition()
 
-	x = centre.x - 17
-	y = centre.y - 24
-	goalX = centre.x + 15
-	goalY = centre.y + 21
-	SetupAnimator()
-
+	DrawLine(centre.x - 17, centre.y - 24, centre.x + 15, centre.y + 21)
 	coroutine.yield()
 
-	x = centre.x - 22
-	y = centre.y + 22
-	goalX = centre.x + 18
-	goalY = centre.y - 18
-	SetupAnimator()
-
+	DrawLine(centre.x - 22, centre.y + 22, centre.x + 18, centre.y - 18)
 	coroutine.yield()
+
 	playerCanInteract = true
 end
 
-local plan
 local cursor
 
 function Setup()
@@ -124,8 +109,8 @@ function Setup()
 
 	cursor:add()
 
-	plan = coroutine.create(DrawBoard)
-	coroutine.resume(plan)
+	pencilAction = coroutine.create(DrawBoard)
+	coroutine.resume(pencilAction)
 
 	gfx.sprite.setBackgroundDrawingCallback(
 		function()
@@ -135,19 +120,19 @@ function Setup()
 end
 
 function pd.update()
-	local previousX = x
-	local previousY = y
+	local previousX = pencilX
+	local previousY = pencilY
 
 	UpdateTipPosition()
 	gfx.sprite.redrawBackground()
 	gfx.lockFocus(canvas)
 	gfx.setLineWidth(math.random(penThickness, penThickness + 1))
 	gfx.setLineCapStyle(gfx.kLineCapStyleRound)
-	gfx.drawLine(previousX, previousY, x, y)
+	gfx.drawLine(previousX, previousY, pencilX, pencilY)
 	gfx.unlockFocus()
 
 	if GoalReached() then
-		coroutine.resume(plan)
+		coroutine.resume(pencilAction)
 	end
 
 	if playerCanInteract then
@@ -166,9 +151,9 @@ function pd.update()
 
 		if pd.buttonJustPressed(pd.kButtonA) then
 			if crossTurn then
-				plan = coroutine.create(DrawCross)
+				pencilAction = coroutine.create(DrawCross)
 			else
-				plan = coroutine.create(DrawNought)
+				pencilAction = coroutine.create(DrawNought)
 			end
 
 			crossTurn = not crossTurn
@@ -192,19 +177,6 @@ function GetCursorPosition()
 	return pd.geometry.point.new(cursorX, cursorY)
 end
 
-function SetupAnimator()
-	local initialPoint = pd.geometry.point.new(x, y)
-	local goalPoint = pd.geometry.point.new(goalX, goalY)
-
-	pencilAnimator = gfx.animator.new(500, initialPoint, goalPoint, pd.easingFunctions.inOutQuint)
-end
-
-function SetupAnimatorCircle()
-	local path = pd.geometry.arc.new(x, y + NOUGHT_RADIUS, NOUGHT_RADIUS, 0, 360)
-
-	pencilAnimator = gfx.animator.new(1000, path, pd.easingFunctions.inOutQuint)
-end
-
 function UpdateTipPosition()
 	if pencilAnimator:ended() then
 		return
@@ -212,8 +184,8 @@ function UpdateTipPosition()
 
 	local nextPoint = pencilAnimator:currentValue();
 	print(nextPoint)
-	x = nextPoint.x;
-	y = nextPoint.y;
+	pencilX = nextPoint.x;
+	pencilY = nextPoint.y;
 end
 
 function GoalReached()
