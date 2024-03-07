@@ -151,6 +151,34 @@ function Setup()
 	)
 end
 
+function CheckForWinner()
+	if playerCanInteract then
+		for row = 1, 3, 1 do
+			if CountInRow(row, "x") == 3 or CountInRow(row, "o") == 3 then
+				DrawWinningLine("row" .. tostring(row))
+				return
+			end
+		end
+
+		for col = 1, 3, 1 do
+			if CountInCol(col, "x") == 3 or CountInCol(col, "o") == 3 then
+				DrawWinningLine("col" .. tostring(col))
+				return
+			end
+		end
+
+		if CountInTopLeftToBottomRight("x") == 3 or CountInTopLeftToBottomRight("o") == 3 then
+			DrawWinningLine("tl-to-br")
+			return
+		end
+
+		if CountInBottomLeftToTopRight("x") == 3 or CountInBottomLeftToTopRight("o") == 3 then
+			DrawWinningLine("bl-to-tr")
+			return
+		end
+	end
+end
+
 function pd.update()
 	local previousX = pencilX
 	local previousY = pencilY
@@ -165,39 +193,7 @@ function pd.update()
 
 	if GoalReached() then
 		coroutine.resume(pencilAction)
-		if playerCanInteract then
-			for col = 1, 3, 1 do
-				local crossCount = 0
-				for row = 1, 3, 1 do
-					if board[col][row] == "x" then
-						crossCount += 1
-					end
-				end
-				if crossCount == 3 then
-					DrawWinningLine("col" .. tostring(col))
-				end
-			end
-
-			for row = 1, 3, 1 do
-				local crossCount = 0
-				for col = 1, 3, 1 do
-					if board[col][row] == "x" then
-						crossCount += 1
-					end
-				end
-				if crossCount == 3 then
-					DrawWinningLine("row" .. tostring(row))
-				end
-			end
-
-			if board[1][1] == "x" and board[2][2] == "x" and board[3][3] == "x" then
-				DrawWinningLine("tl-to-br")
-			end
-
-			if board[1][3] == "x" and board[2][2] == "x" and board[3][1] == "x" then
-				DrawWinningLine("bl-to-tr")
-			end
-		end
+		CheckForWinner()
 	end
 
 	if playerCanInteract then
@@ -256,6 +252,44 @@ end
 
 function GoalReached()
 	return pencilAnimator:ended()
+end
+
+function CountInRow(row, symbol)
+	local count = 0
+	for col = 1, 3, 1 do
+		if board[col][row] == symbol then
+			count += 1
+		end
+	end
+	return count
+end
+
+function CountInCol(col, symbol)
+	local count = 0
+	for row = 1, 3, 1 do
+		if board[col][row] == symbol then
+			count += 1
+		end
+	end
+	return count
+end
+
+function CountInTopLeftToBottomRight(symbol)
+	local count = 0
+	if board[1][1] == symbol then count += 1 end
+	if board[2][2] == symbol then count += 1 end
+	if board[3][3] == symbol then count += 1 end
+
+	return count
+end
+
+function CountInBottomLeftToTopRight(symbol)
+	local count = 0
+	if board[1][3] == symbol then count += 1 end
+	if board[2][2] == symbol then count += 1 end
+	if board[3][1] == symbol then count += 1 end
+
+	return count
 end
 
 Setup()
