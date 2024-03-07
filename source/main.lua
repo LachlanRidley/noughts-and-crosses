@@ -18,8 +18,8 @@ local pencilY
 local pencilAnimator
 local pencilAction
 
-local highlightedX = 1
-local highlightedY = 1
+local highlightedX = 2
+local highlightedY = 2
 
 local penThickness = 2
 
@@ -92,10 +92,17 @@ function DrawCross()
 end
 
 local cursor
+local board
 
 function Setup()
 	-- set the game up
 	pd.display.setRefreshRate(50)
+
+	-- setup board
+	board = table.create(3, 0)
+	board[1] = { "-", "-", "-" }
+	board[2] = { "-", "-", "-" }
+	board[3] = { "-", "-", "-" }
 
 	-- setup canvas
 	canvas = gfx.image.new(SCREEN_WIDTH, SCREEN_HEIGHT)
@@ -137,23 +144,57 @@ function pd.update()
 
 	if playerCanInteract then
 		if pd.buttonJustPressed(pd.kButtonUp) then
-			highlightedY = math.max(highlightedY - 1, 0)
+			highlightedY = math.max(highlightedY - 1, 1)
 		end
 		if pd.buttonJustPressed(pd.kButtonDown) then
-			highlightedY = math.min(highlightedY + 1, 2)
+			highlightedY = math.min(highlightedY + 1, 3)
 		end
 		if pd.buttonJustPressed(pd.kButtonLeft) then
-			highlightedX = math.max(highlightedX - 1, 0)
+			highlightedX = math.max(highlightedX - 1, 1)
 		end
 		if pd.buttonJustPressed(pd.kButtonRight) then
-			highlightedX = math.min(highlightedX + 1, 2)
+			highlightedX = math.min(highlightedX + 1, 3)
 		end
 
 		if pd.buttonJustPressed(pd.kButtonA) then
 			if crossTurn then
+				board[highlightedX][highlightedY] = "x"
 				pencilAction = coroutine.create(DrawCross)
 			else
+				board[highlightedX][highlightedY] = "o"
 				pencilAction = coroutine.create(DrawNought)
+			end
+
+			if board[1][1] == "x" and board[1][2] == "x" and board[1][3] == "x" then
+				print("x wins!")
+			end
+			if board[2][1] == "x" and board[2][2] == "x" and board[2][3] == "x" then
+				print("x wins!")
+			end
+			if board[3][1] == "x" and board[3][2] == "x" and board[3][3] == "x" then
+				print("x wins!")
+			end
+			if board[1][1] == "x" and board[2][2] == "x" and board[3][3] == "x" then
+				print("x wins!")
+			end
+			if board[1][3] == "x" and board[2][2] == "x" and board[3][1] == "x" then
+				print("x wins!")
+			end
+
+			if board[1][1] == "o" and board[1][2] == "o" and board[1][3] == "o" then
+				print("x wins!")
+			end
+			if board[2][1] == "o" and board[2][2] == "o" and board[2][3] == "o" then
+				print("x wins!")
+			end
+			if board[3][1] == "o" and board[3][2] == "o" and board[3][3] == "o" then
+				print("x wins!")
+			end
+			if board[1][1] == "o" and board[2][2] == "o" and board[3][3] == "o" then
+				print("x wins!")
+			end
+			if board[1][3] == "o" and board[2][2] == "o" and board[3][1] == "o" then
+				print("x wins!")
 			end
 
 			crossTurn = not crossTurn
@@ -171,8 +212,8 @@ function pd.update()
 end
 
 function GetCursorPosition()
-	local cursorX = 125 + highlightedX * 70
-	local cursorY = 45 + highlightedY * 60
+	local cursorX = 125 + (highlightedX - 1) * 70
+	local cursorY = 45 + (highlightedY - 1) * 60
 
 	return pd.geometry.point.new(cursorX, cursorY)
 end
@@ -183,7 +224,6 @@ function UpdateTipPosition()
 	end
 
 	local nextPoint = pencilAnimator:currentValue();
-	print(nextPoint)
 	pencilX = nextPoint.x;
 	pencilY = nextPoint.y;
 end
