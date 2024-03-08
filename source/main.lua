@@ -21,10 +21,12 @@ local pencilAction
 local highlightedX = 2
 local highlightedY = 2
 
+local playingAi = true
+
 local penThickness = 2
 
 local canvas
-local playerCanInteract = false
+local someonesTurn = false
 local crossTurn = true
 
 function DrawLine(x1, y1, x2, y2)
@@ -47,7 +49,7 @@ function DrawCircle(centre, r)
 end
 
 function DrawBoard()
-	playerCanInteract = false
+	someonesTurn = false
 
 	DrawLine(160, 21, 156, 187)
 	coroutine.yield()
@@ -61,24 +63,24 @@ function DrawBoard()
 	DrawLine(95, 135, 293, 138)
 	coroutine.yield()
 
-	playerCanInteract = true
+	someonesTurn = true
 end
 
 function DrawNought()
 	penThickness = 5
-	playerCanInteract = false
+	someonesTurn = false
 
 	local centre = GetCursorPosition()
 
 	DrawCircle(centre, NOUGHT_RADIUS)
 	coroutine.yield()
 
-	playerCanInteract = true
+	someonesTurn = true
 end
 
 function DrawCross()
 	penThickness = 5
-	playerCanInteract = false
+	someonesTurn = false
 
 	local centre = GetCursorPosition()
 
@@ -88,11 +90,11 @@ function DrawCross()
 	DrawLine(centre.x - 22, centre.y + 22, centre.x + 18, centre.y - 18)
 	coroutine.yield()
 
-	playerCanInteract = true
+	someonesTurn = true
 end
 
 function DrawWinningLine(location)
-	playerCanInteract = false
+	someonesTurn = false
 	penThickness = 8
 
 	if location == "row1" then
@@ -152,7 +154,7 @@ function Setup()
 end
 
 function CheckForWinner()
-	if playerCanInteract then
+	if someonesTurn then
 		for row = 1, 3, 1 do
 			if CountInRow(row, "x") == 3 or CountInRow(row, "o") == 3 then
 				DrawWinningLine("row" .. tostring(row))
@@ -196,7 +198,18 @@ function pd.update()
 		CheckForWinner()
 	end
 
-	if playerCanInteract then
+	if someonesTurn then
+		if playingAi and not crossTurn then
+			local aiMove = ChooseAiMove()
+			highlightedX = aiMove.x
+			highlightedY = aiMove.y
+
+			board[highlightedX][highlightedY] = "o"
+			pencilAction = coroutine.create(DrawNought)
+
+			crossTurn = not crossTurn
+		end
+
 		if pd.buttonJustPressed(pd.kButtonUp) then
 			highlightedY = math.max(highlightedY - 1, 1)
 		end
@@ -210,7 +223,7 @@ function pd.update()
 			highlightedX = math.min(highlightedX + 1, 3)
 		end
 
-		if pd.buttonJustPressed(pd.kButtonA) then
+		if pd.buttonJustPressed(pd.kButtonA) and SpaceIsFree(highlightedX, highlightedY) then
 			if crossTurn then
 				board[highlightedX][highlightedY] = "x"
 				pencilAction = coroutine.create(DrawCross)
@@ -231,6 +244,26 @@ function pd.update()
 
 	gfx.sprite.update()
 	timer.updateTimers()
+end
+
+function SpaceIsFree(x, y)
+	return board[x][y] == "-"
+end
+
+function ChooseAiMove()
+	local availableMoves = {}
+
+	for col = 1, 3, 1 do
+		for row = 1, 3, 1 do
+			if SpaceIsFree(col, row) then
+				table.insert(availableMoves, { x = col, y = row })
+			end
+		end
+	end
+
+	local chosenMove = availableMoves[math.random(1, #availableMoves)]
+
+	return chosenMove
 end
 
 function GetCursorPosition()
