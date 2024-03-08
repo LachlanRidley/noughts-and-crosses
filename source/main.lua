@@ -30,7 +30,6 @@ local penThickness = 2
 
 local canvas
 local someonesTurn = false
-local crossTurn = true
 
 local cursor
 local board
