@@ -303,7 +303,7 @@ function pd.update()
 	end
 
 	if someonesTurn then
-		if playingAi and not crossTurn then
+		if playingAi and crossTurn then
 			local aiMove = ChooseAiMove()
 			highlightedX = aiMove.x
 			highlightedY = aiMove.y
@@ -391,7 +391,26 @@ function ChooseAiMove()
 		end
 	end
 
-	-- TODO fork
+	for _, move in ipairs(availableMoves) do
+		-- forking means playing any move which will convert 2 unblocked straights into a winnable straight
+		-- that's actually not complicated. Any move with 2 or more unblocked straights is a fork
+		-- get all my unblocked straights (straights with 1 "o" and 0 "x")
+		-- if there are 2 or more then play here to create a fork
+		local straights = GetStraightsForPosition(move.x, move.y)
+
+		local unblockedStraights = {}
+		for _, straight in ipairs(straights) do
+			if GetCountForStraight(straight, "o") == 1 and GetCountForStraight(straight, "x") == 0 then
+				table.insert(unblockedStraights, straight)
+			end
+		end
+
+		if #unblockedStraights >= 2 then
+			print("I can make a fork which means I'll win next turn")
+			return move
+		end
+	end
+
 	-- TODO block opponents fork
 	for _, move in pairs(availableMoves) do
 		if move.x == 2 and move.y == 2 then
