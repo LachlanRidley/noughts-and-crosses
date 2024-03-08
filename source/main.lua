@@ -29,6 +29,113 @@ local canvas
 local someonesTurn = false
 local crossTurn = true
 
+local cursor
+local board
+
+-- straights are the 8 possible winning rows.
+local Straight = {
+	TopRow = 1,
+	MiddleRow = 2,
+	BottomRow = 3,
+
+	LeftColumn = 4,
+	MiddleColumn = 5,
+	RightColumn = 6,
+
+	TopLeftToBottomRight = 7,
+	BottomLeftToTopRight = 8
+}
+
+function GetStraightsForPosition(x, y)
+	local straights = {}
+	if x == 1 then
+		table.insert(straights, Straight.LeftColumn)
+	elseif x == 2 then
+		table.insert(straights, Straight.MiddleColumn)
+	elseif x == 3 then
+		table.insert(straights, Straight.RightColumn)
+	end
+
+	if y == 1 then
+		table.insert(straights, Straight.TopRow)
+	elseif y == 2 then
+		table.insert(straights, Straight.MiddleRow)
+	elseif y == 3 then
+		table.insert(straights, Straight.BottomRow)
+	end
+
+	if x == 2 and y == 2 then
+		table.insert(straights, Straight.TopLeftToBottomRight)
+		table.insert(straights, Straight.BottomLeftToTopRight)
+	elseif (x == 1 and y == 1) or (x == 3 and y == 3) then
+		table.insert(straights, Straight.TopLeftToBottomRight)
+	elseif (x == 1 and y == 3) or (x == 3 and y == 1) then
+		table.insert(straights, Straight.BottomLeftToTopRight)
+	end
+
+	return straights
+end
+
+function GetCountForStraight(straight, symbol)
+	if straight == Straight.TopRow then
+		return CountInRow(1, symbol)
+	elseif straight == Straight.MiddleRow then
+		return CountInRow(2, symbol)
+	elseif straight == Straight.BottomRow then
+		return CountInRow(3, symbol)
+	elseif straight == Straight.LeftColumn then
+		return CountInCol(1, symbol)
+	elseif straight == Straight.MiddleColumn then
+		return CountInCol(2, symbol)
+	elseif straight == Straight.RightColumn then
+		return CountInCol(3, symbol)
+	elseif straight == Straight.TopLeftToBottomRight then
+		return CountInTopLeftToBottomRight(symbol)
+	elseif straight == Straight.BottomLeftToTopRight then
+		return CountInBottomLeftToTopRight(symbol)
+	end
+
+	error("Invalid straight provided")
+end
+
+function CountInRow(row, symbol)
+	local count = 0
+	for col = 1, 3, 1 do
+		if board[col][row] == symbol then
+			count += 1
+		end
+	end
+	return count
+end
+
+function CountInCol(col, symbol)
+	local count = 0
+	for row = 1, 3, 1 do
+		if board[col][row] == symbol then
+			count += 1
+		end
+	end
+	return count
+end
+
+function CountInTopLeftToBottomRight(symbol)
+	local count = 0
+	if board[1][1] == symbol then count += 1 end
+	if board[2][2] == symbol then count += 1 end
+	if board[3][3] == symbol then count += 1 end
+
+	return count
+end
+
+function CountInBottomLeftToTopRight(symbol)
+	local count = 0
+	if board[1][3] == symbol then count += 1 end
+	if board[2][2] == symbol then count += 1 end
+	if board[3][1] == symbol then count += 1 end
+
+	return count
+end
+
 function DrawLine(x1, y1, x2, y2)
 	pencilX = x1
 	pencilY = y1
@@ -117,9 +224,6 @@ function DrawWinningLine(location)
 
 	coroutine.yield()
 end
-
-local cursor
-local board
 
 function Setup()
 	-- set the game up
@@ -251,16 +355,68 @@ function SpaceIsFree(x, y)
 end
 
 function ChooseAiMove()
+	-- SOURCE: https://en.wikipedia.org/wiki/Tic-tac-toe#Strategy
 	local availableMoves = {}
 
-	for col = 1, 3, 1 do
-		for row = 1, 3, 1 do
-			if SpaceIsFree(col, row) then
-				table.insert(availableMoves, { x = col, y = row })
+	for x = 1, 3, 1 do
+		for y = 1, 3, 1 do
+			if SpaceIsFree(x, y) then
+				table.insert(availableMoves, { x = x, y = y })
 			end
 		end
 	end
 
+	-- this doesn't quite work. Because we're iterating the available moves rather than the strategies, the AI will pick worse moves if they come up first
+	for _, move in pairs(availableMoves) do
+		local straights = GetStraightsForPosition(move.x, move.y)
+
+		for _, straight in ipairs(straights) do
+			if GetCountForStraight(straight, "o") == 2 then
+				-- this move is on a straight which already has two "o" so playing here is a win
+				print("I can win so I will")
+				return move
+			end
+		end
+	end
+
+	for _, move in pairs(availableMoves) do
+		local straights = GetStraightsForPosition(move.x, move.y)
+
+		for _, straight in ipairs(straights) do
+			if GetCountForStraight(straight, "x") == 2 then
+				-- I have to block the opponent here or I will lose
+				print("I have to block")
+				return move
+			end
+		end
+	end
+
+	-- TODO fork
+	-- TODO block opponents fork
+	for _, move in pairs(availableMoves) do
+		if move.x == 2 and move.y == 2 then
+			print("hmm, I guess I'll take the centre")
+			return move
+		end
+	end
+
+	-- TODO opposite corner
+
+	for _, move in pairs(availableMoves) do
+		if ((move.x == 1 or move.x == 3) and move.y ~= 2) or ((move.y == 1 or move.y == 3) and move.x ~= 2) then
+			print("I'll take an empty corner plz")
+			return move
+		end
+	end
+
+	for _, move in pairs(availableMoves) do
+		if move.x == 2 or move.y == 2 then
+			print("empty sides are the way to go")
+			return move
+		end
+	end
+
+	print("damn, I don't know what to do. I'll choose an available move at random")
 	local chosenMove = availableMoves[math.random(1, #availableMoves)]
 
 	return chosenMove
@@ -285,44 +441,6 @@ end
 
 function GoalReached()
 	return pencilAnimator:ended()
-end
-
-function CountInRow(row, symbol)
-	local count = 0
-	for col = 1, 3, 1 do
-		if board[col][row] == symbol then
-			count += 1
-		end
-	end
-	return count
-end
-
-function CountInCol(col, symbol)
-	local count = 0
-	for row = 1, 3, 1 do
-		if board[col][row] == symbol then
-			count += 1
-		end
-	end
-	return count
-end
-
-function CountInTopLeftToBottomRight(symbol)
-	local count = 0
-	if board[1][1] == symbol then count += 1 end
-	if board[2][2] == symbol then count += 1 end
-	if board[3][3] == symbol then count += 1 end
-
-	return count
-end
-
-function CountInBottomLeftToTopRight(symbol)
-	local count = 0
-	if board[1][3] == symbol then count += 1 end
-	if board[2][2] == symbol then count += 1 end
-	if board[3][1] == symbol then count += 1 end
-
-	return count
 end
 
 Setup()
