@@ -22,6 +22,9 @@ local highlightedX = 2
 local highlightedY = 2
 
 local playingAi = true
+local aiSymbol = "x"
+local playerSymbol = "o"
+local currentTurn = "x"
 
 local penThickness = 2
 
@@ -134,6 +137,14 @@ function CountInBottomLeftToTopRight(symbol)
 	if board[3][1] == symbol then count += 1 end
 
 	return count
+end
+
+function FlipTurn()
+	if currentTurn == "x" then
+		currentTurn = "o"
+	else
+		currentTurn = "x"
+	end
 end
 
 function DrawLine(x1, y1, x2, y2)
@@ -303,15 +314,19 @@ function pd.update()
 	end
 
 	if someonesTurn then
-		if playingAi and crossTurn then
+		if playingAi and currentTurn == aiSymbol then
 			local aiMove = ChooseAiMove()
 			highlightedX = aiMove.x
 			highlightedY = aiMove.y
 
-			board[highlightedX][highlightedY] = "o"
-			pencilAction = coroutine.create(DrawNought)
+			board[highlightedX][highlightedY] = aiSymbol
+			if aiSymbol == "x" then
+				pencilAction = coroutine.create(DrawCross)
+			else
+				pencilAction = coroutine.create(DrawNought)
+			end
 
-			crossTurn = not crossTurn
+			FlipTurn()
 		end
 
 		if pd.buttonJustPressed(pd.kButtonUp) then
@@ -328,15 +343,14 @@ function pd.update()
 		end
 
 		if pd.buttonJustPressed(pd.kButtonA) and SpaceIsFree(highlightedX, highlightedY) then
-			if crossTurn then
-				board[highlightedX][highlightedY] = "x"
+			board[highlightedX][highlightedY] = playerSymbol
+			if currentTurn == "x" then
 				pencilAction = coroutine.create(DrawCross)
 			else
-				board[highlightedX][highlightedY] = "o"
 				pencilAction = coroutine.create(DrawNought)
 			end
 
-			crossTurn = not crossTurn
+			FlipTurn()
 		end
 
 		cursor:setVisible(true)
@@ -371,7 +385,7 @@ function ChooseAiMove()
 		local straights = GetStraightsForPosition(move.x, move.y)
 
 		for _, straight in ipairs(straights) do
-			if GetCountForStraight(straight, "o") == 2 then
+			if GetCountForStraight(straight, aiSymbol) == 2 then
 				-- this move is on a straight which already has two "o" so playing here is a win
 				print("I can win so I will")
 				return move
@@ -383,7 +397,7 @@ function ChooseAiMove()
 		local straights = GetStraightsForPosition(move.x, move.y)
 
 		for _, straight in ipairs(straights) do
-			if GetCountForStraight(straight, "x") == 2 then
+			if GetCountForStraight(straight, playerSymbol) == 2 then
 				-- I have to block the opponent here or I will lose
 				print("I have to block")
 				return move
@@ -400,7 +414,7 @@ function ChooseAiMove()
 
 		local unblockedStraights = {}
 		for _, straight in ipairs(straights) do
-			if GetCountForStraight(straight, "o") == 1 and GetCountForStraight(straight, "x") == 0 then
+			if GetCountForStraight(straight, aiSymbol) == 1 and GetCountForStraight(straight, playerSymbol) == 0 then
 				table.insert(unblockedStraights, straight)
 			end
 		end
