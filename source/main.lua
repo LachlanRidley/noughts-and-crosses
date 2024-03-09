@@ -269,7 +269,7 @@ end
 
 function CheckForWinner()
 	for _, straight in pairs(Straight) do
-		if CountForStraight(straight, "x") == 3 and CountForStraight(straight, "o") then
+		if CountForStraight(straight, "x") == 3 and CountForStraight(straight, "o") == 3 then
 			DrawWinningLine(straight)
 		end
 	end
