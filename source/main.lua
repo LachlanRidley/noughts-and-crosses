@@ -78,7 +78,7 @@ function GetStraightsForPosition(x, y)
 	return straights
 end
 
-function GetCountForStraight(straight, symbol)
+function CountForStraight(straight, symbol)
 	if straight == Straight.TopRow then
 		return CountInRow(1, symbol)
 	elseif straight == Straight.MiddleRow then
@@ -210,25 +210,25 @@ function DrawCross()
 	someonesTurn = true
 end
 
-function DrawWinningLine(location)
+function DrawWinningLine(straight)
 	someonesTurn = false
 	penThickness = 8
 
-	if location == "row1" then
+	if straight == Straight.TopRow then
 		DrawLine(89, 46, 301, 48)
-	elseif location == "row2" then
+	elseif straight == Straight.MiddleRow then
 		DrawLine(87, 104, 306, 105)
-	elseif location == "row3" then
+	elseif straight == Straight.BottomRow then
 		DrawLine(85, 164, 298, 168)
-	elseif location == "col1" then
+	elseif straight == Straight.LeftColumn then
 		DrawLine(121, 15, 122, 191)
-	elseif location == "col2" then
+	elseif straight == Straight.MiddleColumn then
 		DrawLine(196, 16, 191, 193)
-	elseif location == "col3" then
+	elseif straight == Straight.RightColumn then
 		DrawLine(265, 15, 260, 193)
-	elseif location == "tl-to-br" then
+	elseif straight == Straight.TopLeftToBottomRight then
 		DrawLine(103, 22, 285, 192)
-	elseif location == "bl-to-tr" then
+	elseif straight == Straight.BottomLeftToTopRight then
 		DrawLine(94, 187, 289, 23)
 	end
 
@@ -268,29 +268,9 @@ function Setup()
 end
 
 function CheckForWinner()
-	if someonesTurn then
-		for row = 1, 3, 1 do
-			if CountInRow(row, "x") == 3 or CountInRow(row, "o") == 3 then
-				DrawWinningLine("row" .. tostring(row))
-				return
-			end
-		end
-
-		for col = 1, 3, 1 do
-			if CountInCol(col, "x") == 3 or CountInCol(col, "o") == 3 then
-				DrawWinningLine("col" .. tostring(col))
-				return
-			end
-		end
-
-		if CountInTopLeftToBottomRight("x") == 3 or CountInTopLeftToBottomRight("o") == 3 then
-			DrawWinningLine("tl-to-br")
-			return
-		end
-
-		if CountInBottomLeftToTopRight("x") == 3 or CountInBottomLeftToTopRight("o") == 3 then
-			DrawWinningLine("bl-to-tr")
-			return
+	for _, straight in pairs(Straight) do
+		if CountForStraight(straight, "x") == 3 and CountForStraight(straight, "o") then
+			DrawWinningLine(straight)
 		end
 	end
 end
@@ -309,7 +289,9 @@ function pd.update()
 
 	if GoalReached() then
 		coroutine.resume(pencilAction)
-		CheckForWinner()
+		if someonesTurn then
+			CheckForWinner()
+		end
 	end
 
 	if someonesTurn then
@@ -384,7 +366,7 @@ function ChooseAiMove()
 		local straights = GetStraightsForPosition(move.x, move.y)
 
 		for _, straight in ipairs(straights) do
-			if GetCountForStraight(straight, aiSymbol) == 2 then
+			if CountForStraight(straight, aiSymbol) == 2 then
 				-- this move is on a straight which already has two "o" so playing here is a win
 				print("I can win so I will")
 				return move
@@ -396,7 +378,7 @@ function ChooseAiMove()
 		local straights = GetStraightsForPosition(move.x, move.y)
 
 		for _, straight in ipairs(straights) do
-			if GetCountForStraight(straight, playerSymbol) == 2 then
+			if CountForStraight(straight, playerSymbol) == 2 then
 				-- I have to block the opponent here or I will lose
 				print("I have to block")
 				return move
@@ -413,7 +395,7 @@ function ChooseAiMove()
 
 		local unblockedStraights = {}
 		for _, straight in ipairs(straights) do
-			if GetCountForStraight(straight, aiSymbol) == 1 and GetCountForStraight(straight, playerSymbol) == 0 then
+			if CountForStraight(straight, aiSymbol) == 1 and CountForStraight(straight, playerSymbol) == 0 then
 				table.insert(unblockedStraights, straight)
 			end
 		end
@@ -425,6 +407,13 @@ function ChooseAiMove()
 	end
 
 	-- TODO block opponents fork
+	-- so this is the most complicated one.
+	-- the logic is also slightly different here. Normally we can just look for a good move until we find one and take it but here we have to anticipate the player's move and determine which is the most valuable one to block.
+	-- we have to identify any moves that on the player's turn will create a fork
+	-- if there's only one fork, then we block it, easy
+	-- if there's a move that can block all forks, then we should take it as long as it will produce a winnable straight (which the player will then be forced to block)
+	-- if no such move exists, then we have to stall. Pick any move which will produce a winning straight but not force the player to make a fork when they defend against it
+
 	for _, move in pairs(availableMoves) do
 		if move.x == 2 and move.y == 2 then
 			print("hmm, I guess I'll take the centre")
