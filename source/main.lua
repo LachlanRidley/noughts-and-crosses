@@ -13,6 +13,8 @@ local gfx <const> = pd.graphics
 local snd <const> = pd.sound
 local timer <const> = pd.timer
 
+local pencilImage
+local pencilSprite
 local pencilX
 local pencilY
 local pencilAnimator
@@ -153,7 +155,7 @@ function DrawLine(x1, y1, x2, y2)
 	local initialPoint = pd.geometry.point.new(x1, y1)
 	local goalPoint = pd.geometry.point.new(x2, y2)
 
-	pencilAnimator = gfx.animator.new(500, initialPoint, goalPoint, pd.easingFunctions.inOutQuint)
+	pencilAnimator = gfx.animator.new(1000, initialPoint, goalPoint, pd.easingFunctions.inOutQuint)
 end
 
 function DrawCircle(centre, r)
@@ -265,6 +267,12 @@ function Setup()
 			canvas:draw(0, 0)
 		end
 	)
+
+	pencilImage = gfx.image.new("pencil")
+
+	pencilSprite = gfx.sprite.new(pencilImage)
+	pencilSprite:setCenter(0, 1)
+	pencilSprite:add()
 end
 
 function CheckForWinner()
@@ -286,6 +294,8 @@ function pd.update()
 	gfx.setLineCapStyle(gfx.kLineCapStyleRound)
 	gfx.drawLine(previousX, previousY, pencilX, pencilY)
 	gfx.unlockFocus()
+
+	pencilSprite:moveTo(pencilX, pencilY)
 
 	if GoalReached() then
 		coroutine.resume(pencilAction)
