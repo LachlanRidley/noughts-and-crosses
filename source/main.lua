@@ -277,11 +277,13 @@ end
 
 function CheckForWinner()
 	for _, straight in pairs(Straight) do
-		if CountForStraight(straight, "x") == 3 and CountForStraight(straight, "o") == 3 then
+		if CountForStraight(straight, "x") == 3 or CountForStraight(straight, "o") == 3 then
 			DrawWinningLine(straight)
 		end
 	end
 end
+
+local pencilDown = true
 
 function pd.update()
 	local previousX = pencilX
@@ -289,11 +291,14 @@ function pd.update()
 
 	UpdateTipPosition()
 	gfx.sprite.redrawBackground()
-	gfx.lockFocus(canvas)
-	gfx.setLineWidth(math.random(penThickness, penThickness + 1))
-	gfx.setLineCapStyle(gfx.kLineCapStyleRound)
-	gfx.drawLine(previousX, previousY, pencilX, pencilY)
-	gfx.unlockFocus()
+
+	if pencilDown then
+		gfx.lockFocus(canvas)
+		gfx.setLineWidth(math.random(penThickness, penThickness + 1))
+		gfx.setLineCapStyle(gfx.kLineCapStyleRound)
+		gfx.drawLine(previousX, previousY, pencilX, pencilY)
+		gfx.unlockFocus()
+	end
 
 	pencilSprite:moveTo(pencilX, pencilY)
 
@@ -305,6 +310,8 @@ function pd.update()
 	end
 
 	if someonesTurn then
+		pencilDown = false
+
 		if playingAi and currentTurn == aiSymbol then
 			local aiMove = ChooseAiMove()
 			highlightedX = aiMove.x
@@ -345,9 +352,8 @@ function pd.update()
 		end
 
 		cursor:setVisible(true)
-
-		cursor:moveTo(GetCursorPosition())
 	else
+		pencilDown = true
 		cursor:setVisible(false)
 	end
 
@@ -382,6 +388,12 @@ function MoveCursor(direction)
 
 	highlightedX = newX
 	highlightedY = newY
+
+	local cursorPosition = GetCursorPosition()
+	cursor:moveTo(cursorPosition)
+	pencilX = cursorPosition.x
+	pencilY = cursorPosition.y
+	pencilSprite:moveTo(cursorPosition) -- TODO probably don't need to do this twice
 end
 
 function ChooseAiMove()
