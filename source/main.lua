@@ -321,16 +321,16 @@ function pd.update()
 		end
 
 		if pd.buttonJustPressed(pd.kButtonUp) then
-			highlightedY = math.max(highlightedY - 1, 1)
+			MoveCursor("up")
 		end
 		if pd.buttonJustPressed(pd.kButtonDown) then
-			highlightedY = math.min(highlightedY + 1, 3)
+			MoveCursor("down")
 		end
 		if pd.buttonJustPressed(pd.kButtonLeft) then
-			highlightedX = math.max(highlightedX - 1, 1)
+			MoveCursor("left")
 		end
 		if pd.buttonJustPressed(pd.kButtonRight) then
-			highlightedX = math.min(highlightedX + 1, 3)
+			MoveCursor("right")
 		end
 
 		if pd.buttonJustPressed(pd.kButtonA) and SpaceIsFree(highlightedX, highlightedY) then
@@ -357,6 +357,31 @@ end
 
 function SpaceIsFree(x, y)
 	return board[x][y] == "-"
+end
+
+function IsOutOfBound(x, y)
+	return x < 1 or x > 3 or y < 1 or y > 3
+end
+
+function MoveCursor(direction)
+	local newX = highlightedX
+	local newY = highlightedY
+
+	repeat
+		if direction == "up" then
+			newY -= 1
+		elseif direction == "down" then
+			newY += 1
+		elseif direction == "left" then
+			newX -= 1
+		elseif direction == "right" then
+			newX += 1
+		end
+		if IsOutOfBound(newX, newY) then return end
+	until SpaceIsFree(newX, newY)
+
+	highlightedX = newX
+	highlightedY = newY
 end
 
 function ChooseAiMove()
