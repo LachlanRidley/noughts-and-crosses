@@ -19,6 +19,7 @@ local pencilX
 local pencilY
 local pencilAnimator
 local pencilAction
+local pencilDown = true
 
 local highlightedX = 2
 local highlightedY = 2
@@ -149,6 +150,7 @@ function FlipTurn()
 end
 
 function DrawLine(x1, y1, x2, y2)
+	pencilDown = true
 	pencilX = x1
 	pencilY = y1
 
@@ -158,7 +160,16 @@ function DrawLine(x1, y1, x2, y2)
 	pencilAnimator = gfx.animator.new(1000, initialPoint, goalPoint, pd.easingFunctions.inOutQuint)
 end
 
+function MovePencil(x, y)
+	pencilDown = false
+	local initialPoint = pd.geometry.point.new(pencilX, pencilY)
+	local goalPoint = pd.geometry.point.new(x, y)
+
+	pencilAnimator = gfx.animator.new(500, initialPoint, goalPoint, pd.easingFunctions.inOutQuint)
+end
+
 function DrawCircle(centre, r)
+	pencilDown = true
 	pencilX = centre.x
 	pencilY = centre.y - r
 
@@ -173,10 +184,19 @@ function DrawBoard()
 	DrawLine(160, 21, 156, 187)
 	coroutine.yield()
 
+	MovePencil(231, 19)
+	coroutine.yield()
+
 	DrawLine(231, 19, 225, 190)
 	coroutine.yield()
 
+	MovePencil(96, 74)
+	coroutine.yield()
+
 	DrawLine(96, 74, 291, 76)
+	coroutine.yield()
+
+	MovePencil(95, 135)
 	coroutine.yield()
 
 	DrawLine(95, 135, 293, 138)
@@ -195,6 +215,7 @@ function DrawNought()
 	coroutine.yield()
 
 	someonesTurn = true
+	pencilDown = false
 end
 
 function DrawCross()
@@ -210,6 +231,7 @@ function DrawCross()
 	coroutine.yield()
 
 	someonesTurn = true
+	pencilDown = false
 end
 
 function DrawWinningLine(straight)
@@ -283,8 +305,6 @@ function CheckForWinner()
 	end
 end
 
-local pencilDown = true
-
 function pd.update()
 	local previousX = pencilX
 	local previousY = pencilY
@@ -310,8 +330,6 @@ function pd.update()
 	end
 
 	if someonesTurn then
-		pencilDown = false
-
 		if playingAi and currentTurn == aiSymbol then
 			local aiMove = ChooseAiMove()
 			highlightedX = aiMove.x
@@ -353,7 +371,6 @@ function pd.update()
 
 		cursor:setVisible(true)
 	else
-		pencilDown = true
 		cursor:setVisible(false)
 	end
 
