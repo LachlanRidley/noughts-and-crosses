@@ -17,10 +17,9 @@ local pencilImage
 local pencilSprite
 local pencilAnimator
 local pencilAction
-local pencilDown = true
 local pencilScratch = snd.sampleplayer.new("scratch")
 
-local pencil = { x = 0, y = 0 }
+local pencil = { x = 0, y = 0, drawing = true }
 
 local highlightedX = 2
 local highlightedY = 2
@@ -151,7 +150,7 @@ function FlipTurn()
 end
 
 function DrawLine(x1, y1, x2, y2)
-	pencilDown = true
+	pencil.drawing = true
 	pencil.x = x1
 	pencil.y = y1
 
@@ -163,7 +162,7 @@ function DrawLine(x1, y1, x2, y2)
 end
 
 function MovePencil(x, y)
-	pencilDown = false
+	pencil.drawing = false
 	local initialPoint = pd.geometry.point.new(pencil.x, pencil.y)
 	local goalPoint = pd.geometry.point.new(x, y)
 
@@ -171,7 +170,7 @@ function MovePencil(x, y)
 end
 
 function DrawCircle(centre, r)
-	pencilDown = true
+	pencil.drawing = true
 	pencil.x = centre.x
 	pencil.y = centre.y - r
 
@@ -218,7 +217,7 @@ function DrawNought()
 	coroutine.yield()
 
 	someonesTurn = true
-	pencilDown = false
+	pencil.drawing = false
 end
 
 function DrawCross()
@@ -234,7 +233,7 @@ function DrawCross()
 	coroutine.yield()
 
 	someonesTurn = true
-	pencilDown = false
+	pencil.drawing = false
 end
 
 function DrawWinningLine(straight)
@@ -315,7 +314,7 @@ function pd.update()
 	UpdateTipPosition()
 	gfx.sprite.redrawBackground()
 
-	if pencilDown then
+	if pencil.drawing then
 		gfx.lockFocus(canvas)
 		gfx.setLineWidth(math.random(penThickness, penThickness + 1))
 		gfx.setLineCapStyle(gfx.kLineCapStyleRound)
