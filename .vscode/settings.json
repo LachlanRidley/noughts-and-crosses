@@ -12,7 +12,7 @@
     "|=",
     "^="
   ],
-  "Lua.diagnostics.globals": ["import", "playdate"],
+  "Lua.diagnostics.globals": ["import"],
   "Lua.diagnostics.severity": {
     "duplicate-set-field": "Hint"
   },
