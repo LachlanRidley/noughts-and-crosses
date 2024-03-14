@@ -20,6 +20,7 @@ local pencilY
 local pencilAnimator
 local pencilAction
 local pencilDown = true
+local pencilScratch = snd.sampleplayer.new("scratch")
 
 local highlightedX = 2
 local highlightedY = 2
@@ -158,6 +159,7 @@ function DrawLine(x1, y1, x2, y2)
 	local goalPoint = pd.geometry.point.new(x2, y2)
 
 	pencilAnimator = gfx.animator.new(1000, initialPoint, goalPoint, pd.easingFunctions.inOutQuint)
+	pencilScratch:play()
 end
 
 function MovePencil(x, y)
@@ -176,6 +178,7 @@ function DrawCircle(centre, r)
 	local path = pd.geometry.arc.new(centre.x, centre.y, r, 0, 360)
 
 	pencilAnimator = gfx.animator.new(1000, path, pd.easingFunctions.inOutQuint)
+	pencilScratch:play()
 end
 
 function DrawBoard()
