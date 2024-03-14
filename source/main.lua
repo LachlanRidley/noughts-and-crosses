@@ -15,12 +15,12 @@ local timer <const> = pd.timer
 
 local pencilImage
 local pencilSprite
-local pencilX
-local pencilY
 local pencilAnimator
 local pencilAction
 local pencilDown = true
 local pencilScratch = snd.sampleplayer.new("scratch")
+
+local pencil = { x = 0, y = 0 }
 
 local highlightedX = 2
 local highlightedY = 2
@@ -152,8 +152,8 @@ end
 
 function DrawLine(x1, y1, x2, y2)
 	pencilDown = true
-	pencilX = x1
-	pencilY = y1
+	pencil.x = x1
+	pencil.y = y1
 
 	local initialPoint = pd.geometry.point.new(x1, y1)
 	local goalPoint = pd.geometry.point.new(x2, y2)
@@ -164,7 +164,7 @@ end
 
 function MovePencil(x, y)
 	pencilDown = false
-	local initialPoint = pd.geometry.point.new(pencilX, pencilY)
+	local initialPoint = pd.geometry.point.new(pencil.x, pencil.y)
 	local goalPoint = pd.geometry.point.new(x, y)
 
 	pencilAnimator = gfx.animator.new(500, initialPoint, goalPoint, pd.easingFunctions.inOutQuint)
@@ -172,8 +172,8 @@ end
 
 function DrawCircle(centre, r)
 	pencilDown = true
-	pencilX = centre.x
-	pencilY = centre.y - r
+	pencil.x = centre.x
+	pencil.y = centre.y - r
 
 	local path = pd.geometry.arc.new(centre.x, centre.y, r, 0, 360)
 
@@ -309,8 +309,8 @@ function CheckForWinner()
 end
 
 function pd.update()
-	local previousX = pencilX
-	local previousY = pencilY
+	local previousX = pencil.x
+	local previousY = pencil.y
 
 	UpdateTipPosition()
 	gfx.sprite.redrawBackground()
@@ -319,11 +319,11 @@ function pd.update()
 		gfx.lockFocus(canvas)
 		gfx.setLineWidth(math.random(penThickness, penThickness + 1))
 		gfx.setLineCapStyle(gfx.kLineCapStyleRound)
-		gfx.drawLine(previousX, previousY, pencilX, pencilY)
+		gfx.drawLine(previousX, previousY, pencil.x, pencil.y)
 		gfx.unlockFocus()
 	end
 
-	pencilSprite:moveTo(pencilX, pencilY)
+	pencilSprite:moveTo(pencil.x, pencil.y)
 
 	if GoalReached() then
 		coroutine.resume(pencilAction)
@@ -411,8 +411,8 @@ function MoveCursor(direction)
 
 	local cursorPosition = GetCursorPosition()
 	cursor:moveTo(cursorPosition)
-	pencilX = cursorPosition.x
-	pencilY = cursorPosition.y
+	pencil.x = cursorPosition.x
+	pencil.y = cursorPosition.y
 	pencilSprite:moveTo(cursorPosition) -- TODO probably don't need to do this twice
 end
 
@@ -523,8 +523,8 @@ function UpdateTipPosition()
 	end
 
 	local nextPoint = pencilAnimator:currentValue();
-	pencilX = nextPoint.x;
-	pencilY = nextPoint.y;
+	pencil.x = nextPoint.x;
+	pencil.y = nextPoint.y;
 end
 
 function GoalReached()
