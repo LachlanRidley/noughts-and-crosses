@@ -20,5 +20,5 @@
     "indent_style": "space",
     "indent_size": "4"
   },
-  "Lua.workspace.library": ["../playdate-luacats"]
+  "Lua.workspace.library": ["playdate-luacats"]
 }
