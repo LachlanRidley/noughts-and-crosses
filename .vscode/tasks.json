@@ -6,7 +6,10 @@
     {
       "label": "build",
       "type": "shell",
-      "command": "pdc source build.pdx; PlaydateSimulator build.pdx"
+      "windows": {
+        "command": "pdc source build.pdx; PlaydateSimulator build.pdx"
+      },
+      "osx": { "command": "pdc source build.pdx; open build.pdx" }
     }
   ]
 }
