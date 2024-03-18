@@ -3,6 +3,11 @@ import "CoreLibs/graphics"
 import "CoreLibs/sprites"
 import "CoreLibs/timer"
 
+local GameState = {
+	SplashScreen = 1,
+	Playing = 2
+}
+
 local SCREEN_WIDTH <const> = 400
 local SCREEN_HEIGHT <const> = 240
 
@@ -48,6 +53,7 @@ local someonesTurn = false
 
 local cursor
 local board
+local state = GameState.SplashScreen;
 
 -- straights are the 8 possible winning rows.
 local Straight = {
@@ -275,15 +281,10 @@ function Setup()
 	-- set the game up
 	pd.display.setRefreshRate(50)
 
-	-- setup board
-	board = table.create(3, 0)
-	board[1] = { "-", "-", "-" }
-	board[2] = { "-", "-", "-" }
-	board[3] = { "-", "-", "-" }
-
 	-- setup canvas
 	canvas = gfx.image.new(SCREEN_WIDTH, SCREEN_HEIGHT)
 
+	-- setup cursor
 	cursor = gfx.sprite.new()
 	local r = 5
 	cursor:setSize(r * 2, r * 2)
@@ -293,17 +294,30 @@ function Setup()
 
 	cursor:add()
 
-	pencil = Pencil(0, 0)
-	pencil:add()
-
-	pencilAction = coroutine.create(DrawBoard)
-	coroutine.resume(pencilAction)
-
 	gfx.sprite.setBackgroundDrawingCallback(
 		function()
 			canvas:draw(0, 0)
 		end
 	)
+end
+
+function NewGame()
+	canvas:clear(gfx.kColorWhite)
+	state = GameState.Playing
+
+	-- setup board
+	board = table.create(3, 0)
+	board[1] = { "-", "-", "-" }
+	board[2] = { "-", "-", "-" }
+	board[3] = { "-", "-", "-" }
+
+	-- setup pencil
+	pencil = Pencil(0, 0)
+	pencil:add()
+
+	-- draw a board
+	pencilAction = coroutine.create(DrawBoard)
+	coroutine.resume(pencilAction)
 end
 
 function CheckForWinner()
@@ -314,7 +328,24 @@ function CheckForWinner()
 	end
 end
 
+function DrawSplashScreen()
+	gfx.lockFocus(canvas)
+	gfx.drawText("Noughts + Crosses", 20, SCREEN_HEIGHT / 2)
+	gfx.unlockFocus()
+	gfx.sprite.redrawBackground()
+	gfx.sprite.update()
+end
+
 function pd.update()
+	if state == GameState.SplashScreen then
+		DrawSplashScreen()
+
+		if pd.buttonJustPressed(pd.kButtonA) or pd.buttonJustPressed(pd.kButtonB) then
+			NewGame()
+		end
+		return
+	end
+
 	local previousX = pencil.x
 	local previousY = pencil.y
 
