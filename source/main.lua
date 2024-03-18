@@ -19,6 +19,8 @@ local pencilScratch = snd.sampleplayer.new("scratch")
 
 local pencilImage = gfx.image.new("pencil")
 
+local previousEraserY = nil
+
 class('Pencil').extends(playdate.graphics.sprite)
 
 function Pencil:init(x, y)
@@ -378,6 +380,37 @@ function pd.update()
 	else
 		cursor:setVisible(false)
 	end
+
+	if not pd.isCrankDocked() then
+		-- TODO erasing should always starts from the top, no matter the start position of the crank
+		-- TODO erasing the whole screen should take multiple turns of the crank
+		-- TODO erasing the screen should happen in a back and forth motion (as if you're rubbing it out)
+
+		local crankPosition = pd.getCrankPosition()
+		local crankPositionToScreenY = math.floor((crankPosition / 360) * SCREEN_HEIGHT);
+
+		if previousEraserY == nil then
+			-- this means we've only just started erasing so set the starting pos to the current crank pos
+			previousEraserY = crankPositionToScreenY
+		end
+
+		local erasedSectionY = math.min(previousEraserY, crankPositionToScreenY)
+		local erasedSectionBottomY = math.max(previousEraserY, crankPositionToScreenY)
+
+		local erasedSectionHeight = math.ceil(math.abs(erasedSectionY - erasedSectionBottomY))
+
+		if erasedSectionHeight > 0 then
+			gfx.lockFocus(canvas)
+			gfx.setColor(gfx.kColorWhite)
+			gfx.fillRect(0, erasedSectionY, SCREEN_WIDTH, erasedSectionHeight)
+			gfx.unlockFocus()
+
+			previousEraserY = previousEraserY + erasedSectionHeight
+		end
+	else
+		previousEraserY = nil
+	end
+
 
 	gfx.sprite.update()
 	timer.updateTimers()
