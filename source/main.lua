@@ -3,6 +3,9 @@ import "CoreLibs/graphics"
 import "CoreLibs/sprites"
 import "CoreLibs/timer"
 
+-- TODO list
+-- add unit tests (https://devforum.play.date/t/unit-testing-game-lib/2083)
+
 ---@enum GameState
 local GameState = {
 	SplashScreen = 1,
