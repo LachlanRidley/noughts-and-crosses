@@ -3,6 +3,7 @@ import "CoreLibs/graphics"
 import "CoreLibs/sprites"
 import "CoreLibs/timer"
 
+---@enum GameState
 local GameState = {
 	SplashScreen = 1,
 	Playing = 2
@@ -19,14 +20,22 @@ local snd <const> = pd.sound
 local timer <const> = pd.timer
 
 local pencilAnimator
+
+---@type thread
 local pencilAction
 local pencilScratch = snd.sampleplayer.new("scratch")
 
+---@type _Image
 local pencilImage = gfx.image.new("pencil")
 
 local previousEraserY = nil
 
-class('Pencil').extends(playdate.graphics.sprite)
+---@class Pencil: _Sprite
+---@field x integer
+---@field y integer
+---@field drawing boolean
+---@overload fun(x: integer, y: integer): Pencil
+Pencil = class('Pencil').extends(playdate.graphics.sprite) or Pencil
 
 function Pencil:init(x, y)
 	Pencil.super.init(self)
@@ -36,14 +45,20 @@ function Pencil:init(x, y)
 	self.drawing = false
 end
 
+---@type Pencil
 local pencil
 
 local highlightedX = 2
 local highlightedY = 2
 
 local playingAi = true
+
+---@alias symbol "-" | "o" | "x"
+---@type symbol
 local aiSymbol = "x"
+---@type symbol
 local playerSymbol = "o"
+---@type symbol
 local currentTurn = "x"
 
 local penThickness = 2
@@ -52,10 +67,15 @@ local canvas
 local someonesTurn = false
 
 local cursor
+
+---@type symbol[][]
 local board
+
+---@type GameState
 local state = GameState.SplashScreen;
 
 -- straights are the 8 possible winning rows.
+---@enum Straight
 local Straight = {
 	TopRow = 1,
 	MiddleRow = 2,
@@ -99,6 +119,8 @@ function GetStraightsForPosition(x, y)
 	return straights
 end
 
+---@param straight Straight
+---@param symbol symbol
 function CountForStraight(straight, symbol)
 	if straight == Straight.TopRow then
 		return CountInRow(1, symbol)
@@ -252,6 +274,7 @@ function DrawCross()
 	pencil.drawing = false
 end
 
+---@param straight Straight
 function DrawWinningLine(straight)
 	someonesTurn = false
 	penThickness = 8
@@ -306,10 +329,11 @@ function NewGame()
 	state = GameState.Playing
 
 	-- setup board
-	board = table.create(3, 0)
-	board[1] = { "-", "-", "-" }
-	board[2] = { "-", "-", "-" }
-	board[3] = { "-", "-", "-" }
+	board = {
+		{ "-", "-", "-" },
+		{ "-", "-", "-" },
+		{ "-", "-", "-" }
+	}
 
 	-- setup pencil
 	pencil = Pencil(0, 0)
@@ -455,6 +479,9 @@ function IsOutOfBound(x, y)
 	return x < 1 or x > 3 or y < 1 or y > 3
 end
 
+---@alias direction "up" | "down" | "left" | "right"
+
+---@param direction direction
 function MoveCursor(direction)
 	local newX = highlightedX
 	local newY = highlightedY
