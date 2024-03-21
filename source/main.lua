@@ -51,11 +51,11 @@ function Pencil:init(x, y)
 	self:moveTo(x, y)
 	self:setCenter(0, 1)
 	self.drawing = false
+	self.thickness = 2
 end
 
 ---@type Pencil
 local pencil
-local penThickness = 2
 
 function Pencil:update()
 	if pencilAnimator:ended() then
@@ -71,7 +71,7 @@ function Pencil:update()
 
 	if self.drawing then
 		gfx.lockFocus(canvas)
-		gfx.setLineWidth(math.random(penThickness, penThickness + 1))
+		gfx.setLineWidth(math.random(self.thickness, self.thickness + 1))
 		gfx.setLineCapStyle(gfx.kLineCapStyleRound)
 		gfx.drawLine(previousX, previousY, self.x, self.y)
 		gfx.unlockFocus()
@@ -278,7 +278,7 @@ function DrawBoard()
 end
 
 function DrawNought()
-	penThickness = 5
+	pencil.thickness = 5
 	someonesTurn = false
 
 	local centre = GetCursorPosition()
@@ -291,7 +291,7 @@ function DrawNought()
 end
 
 function DrawCross()
-	penThickness = 5
+	pencil.thickness = 5
 	someonesTurn = false
 
 	local centre = GetCursorPosition()
@@ -309,7 +309,7 @@ end
 ---@param straight Straight
 function DrawWinningLine(straight)
 	someonesTurn = false
-	penThickness = 8
+	pencil.thickness = 8
 
 	if straight == Straight.TopRow then
 		DrawLine(89, 46, 301, 48)
