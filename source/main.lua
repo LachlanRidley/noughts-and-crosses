@@ -93,6 +93,30 @@ function Pencil:IsDone()
 	return pencil.animator:ended()
 end
 
+---Raise the pencil and move it to a position
+---@param x integer
+---@param y integer
+function Pencil:MovePencil(x, y)
+	self.drawing = false
+	local initialPoint = pd.geometry.point.new(self.x, self.y)
+	local goalPoint = pd.geometry.point.new(x, y)
+
+	self.animator = gfx.animator.new(500, initialPoint, goalPoint, pd.easingFunctions.inOutQuint)
+end
+
+---Queues a circle draw
+---@param centre _Point
+---@param radius integer
+function Pencil:DrawCircle(centre, radius)
+	self.drawing = true
+	self:moveTo(centre.x, centre.y - radius)
+
+	local path = pd.geometry.arc.new(centre.x, centre.y, radius, 0, 360)
+
+	self.animator = gfx.animator.new(1000, path, pd.easingFunctions.inOutQuint)
+	pencilScratch:play()
+end
+
 local highlightedX = 2
 local highlightedY = 2
 
@@ -231,43 +255,25 @@ function FlipTurn()
 	end
 end
 
-function MovePencil(x, y)
-	pencil.drawing = false
-	local initialPoint = pd.geometry.point.new(pencil.x, pencil.y)
-	local goalPoint = pd.geometry.point.new(x, y)
-
-	pencil.animator = gfx.animator.new(500, initialPoint, goalPoint, pd.easingFunctions.inOutQuint)
-end
-
-function DrawCircle(centre, r)
-	pencil.drawing = true
-	pencil:moveTo(centre.x, centre.y - r)
-
-	local path = pd.geometry.arc.new(centre.x, centre.y, r, 0, 360)
-
-	pencil.animator = gfx.animator.new(1000, path, pd.easingFunctions.inOutQuint)
-	pencilScratch:play()
-end
-
 function DrawBoard()
 	someonesTurn = false
 
 	pencil:DrawLine(160, 21, 156, 187)
 	coroutine.yield()
 
-	MovePencil(231, 19)
+	pencil:MovePencil(231, 19)
 	coroutine.yield()
 
 	pencil:DrawLine(231, 19, 225, 190)
 	coroutine.yield()
 
-	MovePencil(96, 74)
+	pencil:MovePencil(96, 74)
 	coroutine.yield()
 
 	pencil:DrawLine(96, 74, 291, 76)
 	coroutine.yield()
 
-	MovePencil(95, 135)
+	pencil:MovePencil(95, 135)
 	coroutine.yield()
 
 	pencil:DrawLine(95, 135, 293, 138)
@@ -282,7 +288,7 @@ function DrawNought()
 
 	local centre = GetCursorPosition()
 
-	DrawCircle(centre, NOUGHT_RADIUS)
+	pencil:DrawCircle(centre, NOUGHT_RADIUS)
 	coroutine.yield()
 
 	someonesTurn = true
