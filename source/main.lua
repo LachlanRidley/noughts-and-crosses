@@ -3,6 +3,8 @@ import "CoreLibs/graphics"
 import "CoreLibs/sprites"
 import "CoreLibs/timer"
 
+printTable(playdate.argv)
+
 -- TODO list
 -- add unit tests (https://devforum.play.date/t/unit-testing-game-lib/2083)
 
@@ -24,9 +26,12 @@ local timer <const> = pd.timer
 
 local pencilAnimator
 
+local canvas
+
 ---@type thread
 local pencilAction
 local pencilScratch = snd.sampleplayer.new("scratch")
+local skipPencil = true
 
 ---@type _Image
 local pencilImage = gfx.image.new("pencil")
@@ -50,6 +55,33 @@ end
 
 ---@type Pencil
 local pencil
+local penThickness = 2
+
+-- TODO make these methods on Pencil
+function UpdatePencil()
+	if pencilAnimator:ended() then
+		if coroutine.status(pencilAction) == "dead" then return end -- TODO if there's no actions queued then the pencil should just drift towards the cursor
+		coroutine.resume(pencilAction)
+	end
+
+	local previousX = pencil.x
+	local previousY = pencil.y
+
+	local nextPoint = pencilAnimator:currentValue();
+	pencil:moveTo(nextPoint.x, nextPoint.y)
+
+	if pencil.drawing then
+		gfx.lockFocus(canvas)
+		gfx.setLineWidth(math.random(penThickness, penThickness + 1))
+		gfx.setLineCapStyle(gfx.kLineCapStyleRound)
+		gfx.drawLine(previousX, previousY, pencil.x, pencil.y)
+		gfx.unlockFocus()
+	end
+end
+
+function PencilIsDone()
+	return pencilAnimator:ended()
+end
 
 local highlightedX = 2
 local highlightedY = 2
@@ -64,9 +96,6 @@ local playerSymbol = "o"
 ---@type symbol
 local currentTurn = "x"
 
-local penThickness = 2
-
-local canvas
 local someonesTurn = false
 
 local cursor
@@ -75,7 +104,7 @@ local cursor
 local board
 
 ---@type GameState
-local state = GameState.SplashScreen;
+local state = GameState.Playing;
 
 -- straights are the 8 possible winning rows.
 ---@enum Straight
@@ -325,9 +354,15 @@ function Setup()
 			canvas:draw(0, 0)
 		end
 	)
+
+	if pd.argv[1] ~= nil then
+		NewGame(pd.argv[1])
+	end
 end
 
-function NewGame()
+---Starts a new game. Can safely be called at any time
+---@param startState string?
+function NewGame(startState)
 	canvas:clear(gfx.kColorWhite)
 	state = GameState.Playing
 
@@ -345,6 +380,15 @@ function NewGame()
 	-- draw a board
 	pencilAction = coroutine.create(DrawBoard)
 	coroutine.resume(pencilAction)
+
+	-- if startState ~= nil then
+	-- 	for i = 1, #startState do
+	-- 		local x = math.floor(i / 3)
+	-- 		local y = i % 3
+
+	-- 		PlayOnSpace(x, y, startState[i])
+	-- 	end
+	-- end
 end
 
 function CheckForWinner()
@@ -373,40 +417,21 @@ function pd.update()
 		return
 	end
 
-	local previousX = pencil.x
-	local previousY = pencil.y
 
-	UpdateTipPosition()
-	gfx.sprite.redrawBackground()
+	UpdatePencil()
 
-	if pencil.drawing then
-		gfx.lockFocus(canvas)
-		gfx.setLineWidth(math.random(penThickness, penThickness + 1))
-		gfx.setLineCapStyle(gfx.kLineCapStyleRound)
-		gfx.drawLine(previousX, previousY, pencil.x, pencil.y)
-		gfx.unlockFocus()
-	end
-
-	if GoalReached() then
-		coroutine.resume(pencilAction)
-		if someonesTurn then
-			CheckForWinner()
-		end
+	if PencilIsDone() and someonesTurn then
+		CheckForWinner()
 	end
 
 	if someonesTurn then
 		if playingAi and currentTurn == aiSymbol then
 			local aiMove = ChooseAiMove()
+			-- TODO not good that we need to set the highlightedX here
 			highlightedX = aiMove.x
 			highlightedY = aiMove.y
 
-			board[highlightedX][highlightedY] = aiSymbol
-			if aiSymbol == "x" then
-				pencilAction = coroutine.create(DrawCross)
-			else
-				pencilAction = coroutine.create(DrawNought)
-			end
-
+			PlayOnSpace(highlightedX, highlightedY, aiSymbol)
 			FlipTurn()
 		end
 
@@ -424,13 +449,7 @@ function pd.update()
 		end
 
 		if pd.buttonJustPressed(pd.kButtonA) and SpaceIsFree(highlightedX, highlightedY) then
-			board[highlightedX][highlightedY] = playerSymbol
-			if currentTurn == "x" then
-				pencilAction = coroutine.create(DrawCross)
-			else
-				pencilAction = coroutine.create(DrawNought)
-			end
-
+			PlayOnSpace(highlightedX, highlightedY, playerSymbol)
 			FlipTurn()
 		end
 
@@ -469,9 +488,22 @@ function pd.update()
 		previousEraserY = nil
 	end
 
-
+	gfx.sprite.redrawBackground()
 	gfx.sprite.update()
 	timer.updateTimers()
+end
+
+--- Plays a symbol in the provided space. Currently assumes that you have already checked that the space is free.
+---@param x 1 | 2 | 3
+---@param y 1 | 2 | 3
+---@param symbol symbol
+function PlayOnSpace(x, y, symbol)
+	board[x][y] = symbol
+	if symbol == "x" then
+		pencilAction = coroutine.create(DrawCross)
+	else
+		pencilAction = coroutine.create(DrawNought)
+	end
 end
 
 function SpaceIsFree(x, y)
@@ -609,19 +641,6 @@ function GetCursorPosition()
 	local cursorY = 45 + (highlightedY - 1) * 60
 
 	return pd.geometry.point.new(cursorX, cursorY)
-end
-
-function UpdateTipPosition()
-	if pencilAnimator:ended() then
-		return
-	end
-
-	local nextPoint = pencilAnimator:currentValue();
-	pencil:moveTo(nextPoint)
-end
-
-function GoalReached()
-	return pencilAnimator:ended()
 end
 
 Setup()
