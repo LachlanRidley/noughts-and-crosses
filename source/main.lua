@@ -57,28 +57,28 @@ end
 local pencil
 local penThickness = 2
 
--- TODO make these methods on Pencil
-function UpdatePencil()
+function Pencil:update()
 	if pencilAnimator:ended() then
 		if coroutine.status(pencilAction) == "dead" then return end -- TODO if there's no actions queued then the pencil should just drift towards the cursor
 		coroutine.resume(pencilAction)
 	end
 
-	local previousX = pencil.x
-	local previousY = pencil.y
+	local previousX = self.x
+	local previousY = self.y
 
 	local nextPoint = pencilAnimator:currentValue();
-	pencil:moveTo(nextPoint.x, nextPoint.y)
+	self:moveTo(nextPoint.x, nextPoint.y)
 
-	if pencil.drawing then
+	if self.drawing then
 		gfx.lockFocus(canvas)
 		gfx.setLineWidth(math.random(penThickness, penThickness + 1))
 		gfx.setLineCapStyle(gfx.kLineCapStyleRound)
-		gfx.drawLine(previousX, previousY, pencil.x, pencil.y)
+		gfx.drawLine(previousX, previousY, self.x, self.y)
 		gfx.unlockFocus()
 	end
 end
 
+-- TODO make these methods on Pencil
 function PencilIsDone()
 	return pencilAnimator:ended()
 end
@@ -416,9 +416,6 @@ function pd.update()
 		end
 		return
 	end
-
-
-	UpdatePencil()
 
 	if PencilIsDone() and someonesTurn then
 		CheckForWinner()
