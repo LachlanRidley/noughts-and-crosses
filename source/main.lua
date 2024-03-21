@@ -24,8 +24,6 @@ local gfx <const> = pd.graphics
 local snd <const> = pd.sound
 local timer <const> = pd.timer
 
-local pencilAnimator
-
 local canvas
 
 ---@type thread
@@ -42,6 +40,8 @@ local previousEraserY = nil
 ---@field x integer
 ---@field y integer
 ---@field drawing boolean
+---@field thickness integer
+---@field private animator _Animator
 ---@overload fun(x: integer, y: integer): Pencil
 Pencil = class('Pencil').extends(playdate.graphics.sprite) or Pencil
 
@@ -58,7 +58,7 @@ end
 local pencil
 
 function Pencil:update()
-	if pencilAnimator:ended() then
+	if self.animator:ended() then
 		if coroutine.status(pencilAction) == "dead" then return end -- TODO if there's no actions queued then the pencil should just drift towards the cursor
 		coroutine.resume(pencilAction)
 	end
@@ -66,7 +66,7 @@ function Pencil:update()
 	local previousX = self.x
 	local previousY = self.y
 
-	local nextPoint = pencilAnimator:currentValue();
+	local nextPoint = self.animator:currentValue();
 	self:moveTo(nextPoint.x, nextPoint.y)
 
 	if self.drawing then
@@ -78,9 +78,19 @@ function Pencil:update()
 	end
 end
 
--- TODO make these methods on Pencil
-function PencilIsDone()
-	return pencilAnimator:ended()
+function Pencil:DrawLine(x1, y1, x2, y2)
+	local initialPoint = pd.geometry.point.new(x1, y1)
+	local goalPoint = pd.geometry.point.new(x2, y2)
+
+	self.animator = gfx.animator.new(1000, initialPoint, goalPoint, pd.easingFunctions.inOutQuint)
+	self.drawing = true
+	self:moveTo(x1, y1)
+
+	pencilScratch:play()
+end
+
+function Pencil:IsDone()
+	return pencil.animator:ended()
 end
 
 local highlightedX = 2
@@ -221,23 +231,12 @@ function FlipTurn()
 	end
 end
 
-function DrawLine(x1, y1, x2, y2)
-	local initialPoint = pd.geometry.point.new(x1, y1)
-	local goalPoint = pd.geometry.point.new(x2, y2)
-
-	pencilAnimator = gfx.animator.new(1000, initialPoint, goalPoint, pd.easingFunctions.inOutQuint)
-	pencil.drawing = true
-	pencil:moveTo(x1, y1)
-
-	pencilScratch:play()
-end
-
 function MovePencil(x, y)
 	pencil.drawing = false
 	local initialPoint = pd.geometry.point.new(pencil.x, pencil.y)
 	local goalPoint = pd.geometry.point.new(x, y)
 
-	pencilAnimator = gfx.animator.new(500, initialPoint, goalPoint, pd.easingFunctions.inOutQuint)
+	pencil.animator = gfx.animator.new(500, initialPoint, goalPoint, pd.easingFunctions.inOutQuint)
 end
 
 function DrawCircle(centre, r)
@@ -246,32 +245,32 @@ function DrawCircle(centre, r)
 
 	local path = pd.geometry.arc.new(centre.x, centre.y, r, 0, 360)
 
-	pencilAnimator = gfx.animator.new(1000, path, pd.easingFunctions.inOutQuint)
+	pencil.animator = gfx.animator.new(1000, path, pd.easingFunctions.inOutQuint)
 	pencilScratch:play()
 end
 
 function DrawBoard()
 	someonesTurn = false
 
-	DrawLine(160, 21, 156, 187)
+	pencil:DrawLine(160, 21, 156, 187)
 	coroutine.yield()
 
 	MovePencil(231, 19)
 	coroutine.yield()
 
-	DrawLine(231, 19, 225, 190)
+	pencil:DrawLine(231, 19, 225, 190)
 	coroutine.yield()
 
 	MovePencil(96, 74)
 	coroutine.yield()
 
-	DrawLine(96, 74, 291, 76)
+	pencil:DrawLine(96, 74, 291, 76)
 	coroutine.yield()
 
 	MovePencil(95, 135)
 	coroutine.yield()
 
-	DrawLine(95, 135, 293, 138)
+	pencil:DrawLine(95, 135, 293, 138)
 	coroutine.yield()
 
 	someonesTurn = true
@@ -296,10 +295,10 @@ function DrawCross()
 
 	local centre = GetCursorPosition()
 
-	DrawLine(centre.x - 17, centre.y - 24, centre.x + 15, centre.y + 21)
+	pencil:DrawLine(centre.x - 17, centre.y - 24, centre.x + 15, centre.y + 21)
 	coroutine.yield()
 
-	DrawLine(centre.x - 22, centre.y + 22, centre.x + 18, centre.y - 18)
+	pencil:DrawLine(centre.x - 22, centre.y + 22, centre.x + 18, centre.y - 18)
 	coroutine.yield()
 
 	someonesTurn = true
@@ -312,21 +311,21 @@ function DrawWinningLine(straight)
 	pencil.thickness = 8
 
 	if straight == Straight.TopRow then
-		DrawLine(89, 46, 301, 48)
+		pencil:DrawLine(89, 46, 301, 48)
 	elseif straight == Straight.MiddleRow then
-		DrawLine(87, 104, 306, 105)
+		pencil:DrawLine(87, 104, 306, 105)
 	elseif straight == Straight.BottomRow then
-		DrawLine(85, 164, 298, 168)
+		pencil:DrawLine(85, 164, 298, 168)
 	elseif straight == Straight.LeftColumn then
-		DrawLine(121, 15, 122, 191)
+		pencil:DrawLine(121, 15, 122, 191)
 	elseif straight == Straight.MiddleColumn then
-		DrawLine(196, 16, 191, 193)
+		pencil:DrawLine(196, 16, 191, 193)
 	elseif straight == Straight.RightColumn then
-		DrawLine(265, 15, 260, 193)
+		pencil:DrawLine(265, 15, 260, 193)
 	elseif straight == Straight.TopLeftToBottomRight then
-		DrawLine(103, 22, 285, 192)
+		pencil:DrawLine(103, 22, 285, 192)
 	elseif straight == Straight.BottomLeftToTopRight then
-		DrawLine(94, 187, 289, 23)
+		pencil:DrawLine(94, 187, 289, 23)
 	end
 
 	coroutine.yield()
@@ -417,7 +416,7 @@ function pd.update()
 		return
 	end
 
-	if PencilIsDone() and someonesTurn then
+	if pencil:IsDone() and someonesTurn then
 		CheckForWinner()
 	end
 
