@@ -31,8 +31,11 @@ local pencilAction
 local pencilScratch = snd.sampleplayer.new("scratch")
 local skipPencil = true
 
----@type _Image
+---@type _Image?
 local pencilImage = gfx.image.new("pencil")
+
+---@type _Font
+local font = gfx.font.new("Cameltry")
 
 local previousEraserY = nil
 
@@ -47,6 +50,10 @@ Pencil = class('Pencil').extends(playdate.graphics.sprite) or Pencil
 
 function Pencil:init(x, y)
 	Pencil.super.init(self)
+	if pencilImage == nil then
+		print("Failed to load pencil image")
+		return
+	end
 	self:setImage(pencilImage)
 	self:moveTo(x, y)
 	self:setCenter(0, 1)
@@ -138,10 +145,10 @@ local cursor
 local board
 
 ---@type GameState
-local state = GameState.Playing;
+local state = GameState.SplashScreen;
 
 -- straights are the 8 possible winning rows.
----@enum Straight
+---@enum straight
 local Straight = {
 	TopRow = 1,
 	MiddleRow = 2,
@@ -155,6 +162,12 @@ local Straight = {
 	BottomLeftToTopRight = 8
 }
 
+---@alias boardCoordinate 1 | 2 | 3
+
+---Returns all the straights that include a given position on the board.
+---@param x boardCoordinate
+---@param y boardCoordinate
+---@return straight[]
 function GetStraightsForPosition(x, y)
 	local straights = {}
 	if x == 1 then
@@ -185,7 +198,7 @@ function GetStraightsForPosition(x, y)
 	return straights
 end
 
----@param straight Straight
+---@param straight straight
 ---@param symbol symbol
 function CountForStraight(straight, symbol)
 	if straight == Straight.TopRow then
@@ -311,7 +324,7 @@ function DrawCross()
 	pencil.drawing = false
 end
 
----@param straight Straight
+---@param straight straight
 function DrawWinningLine(straight)
 	someonesTurn = false
 	pencil.thickness = 8
@@ -343,6 +356,8 @@ function Setup()
 
 	-- setup canvas
 	canvas = gfx.image.new(SCREEN_WIDTH, SCREEN_HEIGHT)
+
+	gfx.setFont(font)
 
 	-- setup cursor
 	cursor = gfx.sprite.new()
@@ -406,7 +421,7 @@ end
 
 function DrawSplashScreen()
 	gfx.lockFocus(canvas)
-	gfx.drawText("Noughts + Crosses", 20, SCREEN_HEIGHT / 2)
+	gfx.drawText("NOUGHTS AND CROSSES", 20, SCREEN_HEIGHT / 2)
 	gfx.unlockFocus()
 	gfx.sprite.redrawBackground()
 	gfx.sprite.update()
@@ -541,7 +556,7 @@ function MoveCursor(direction)
 
 	local cursorPosition = GetCursorPosition()
 	cursor:moveTo(cursorPosition)
-	pencil:moveTo(cursorPosition) -- TODO probably don't need to do this twice
+	pencil:moveTo(cursorPosition.x, cursorPosition.y)
 end
 
 function ChooseAiMove()
@@ -556,7 +571,6 @@ function ChooseAiMove()
 		end
 	end
 
-	-- this doesn't quite work. Because we're iterating the available moves rather than the strategies, the AI will pick worse moves if they come up first
 	for _, move in pairs(availableMoves) do
 		local straights = GetStraightsForPosition(move.x, move.y)
 

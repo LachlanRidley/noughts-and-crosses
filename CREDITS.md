@@ -1,1 +1,2 @@
 - Sounds from [ZapSplat](https://www.zapsplat.com)
+- Cameltry font from https://idleberg.github.io/playdate-arcade-fonts/try/Cameltry/
