@@ -168,6 +168,17 @@ function Cursor:MoveInDirection(direction)
 	self:moveTo(cursorPosition.x, cursorPosition.y)
 end
 
+---set the cursors position in board space
+---@param x boardDimension
+---@param y boardDimension
+function Cursor:MoveToBoardCoordinate(x, y)
+	self.boardX = x
+	self.boardY = y
+
+	local cursorPosition = ConvertBoardCoordinateToScreenSpace({ x = self.boardX, y = self.boardY })
+	self:moveTo(cursorPosition.x, cursorPosition.y)
+end
+
 local playingAi = true
 
 ---@alias symbol "-" | "o" | "x"
@@ -460,18 +471,25 @@ function NewGame(startState)
 	canvas:clear(gfx.kColorWhite)
 	state = GameState.Playing
 
-	-- setup board
+	-- setup game
 	board = {
 		{ "-", "-", "-" },
 		{ "-", "-", "-" },
 		{ "-", "-", "-" }
 	}
+	currentTurn = "x"
 
 	-- setup pencil
+	if pencil ~= nil then
+		pencil:remove()
+	end
 	pencil = Pencil(0, 0)
 	pencil:add()
 
 	-- setup cursor
+	if cursor ~= nil then
+		cursor:remove()
+	end
 	cursor = Cursor(1, 1)
 	cursor:add()
 
