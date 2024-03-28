@@ -3,10 +3,17 @@ import "CoreLibs/graphics"
 import "CoreLibs/sprites"
 import "CoreLibs/timer"
 
-printTable(playdate.argv)
+-- globals
+local SCREEN_WIDTH <const> = 400
+local SCREEN_HEIGHT <const> = 240
 
--- TODO list
--- add unit tests (https://devforum.play.date/t/unit-testing-game-lib/2083)
+local NOUGHT_RADIUS <const> = 20
+
+
+local pd <const> = playdate
+local gfx <const> = pd.graphics
+local snd <const> = pd.sound
+local timer <const> = pd.timer
 
 ---@enum GameState
 local GameState = {
@@ -14,22 +21,12 @@ local GameState = {
 	Playing = 2
 }
 
-local SCREEN_WIDTH <const> = 400
-local SCREEN_HEIGHT <const> = 240
-
-local NOUGHT_RADIUS <const> = 20
-
-local pd <const> = playdate
-local gfx <const> = pd.graphics
-local snd <const> = pd.sound
-local timer <const> = pd.timer
-
+---@type _Image
 local canvas
 
 ---@type thread
 local pencilAction
 local pencilScratch = snd.sampleplayer.new("scratch")
-local skipPencil = true
 
 ---@type _Image?
 local pencilImage = gfx.image.new("pencil")
@@ -37,6 +34,7 @@ local pencilImage = gfx.image.new("pencil")
 ---@type _Font
 local font = gfx.font.new("Cameltry")
 
+---@type integer | nil
 local previousEraserY = nil
 
 ---@class Pencil: _Sprite
@@ -124,8 +122,51 @@ function Pencil:DrawCircle(centre, radius)
 	pencilScratch:play()
 end
 
-local highlightedX = 2
-local highlightedY = 2
+---@class Cursor: _Sprite
+---@field boardX boardDimension
+---@field boardY boardDimension
+---@overload fun(x: boardDimension, y: boardDimension): Cursor
+Cursor = class('Cursor').extends(gfx.sprite) or Cursor
+
+function Cursor:init(x, y)
+	Cursor.super.init(self)
+
+	self.boardX = x
+	self.boardY = y
+
+	local r = 5
+	self:setSize(r * 2, r * 2)
+	function self:draw()
+		gfx.drawCircleAtPoint(r, r, r)
+	end
+end
+
+---@alias direction "up" | "down" | "left" | "right"
+
+---@param direction direction
+function Cursor:MoveInDirection(direction)
+	local newX = self.boardX
+	local newY = self.boardY
+
+	repeat
+		if direction == "up" then
+			newY -= 1
+		elseif direction == "down" then
+			newY += 1
+		elseif direction == "left" then
+			newX -= 1
+		elseif direction == "right" then
+			newX += 1
+		end
+		if IsOutOfBound(newX, newY) then return end
+	until SpaceIsFree(newX, newY)
+
+	self.boardX = newX
+	self.boardY = newY
+
+	local cursorPosition = ConvertBoardCoordinateToScreenSpace({ x = self.boardX, y = self.boardY })
+	self:moveTo(cursorPosition.x, cursorPosition.y)
+end
 
 local playingAi = true
 
@@ -139,7 +180,18 @@ local currentTurn = "x"
 
 local someonesTurn = false
 
+---@type Cursor
 local cursor
+
+---Takes a cursor and converts it's board coordinate into screen space so that it can be drawn
+---@param coordinate boardCoordinate
+---@return _Point
+function ConvertBoardCoordinateToScreenSpace(coordinate)
+	local screenX = 125 + (coordinate.x - 1) * 70
+	local screenY = 45 + (coordinate.y - 1) * 60
+
+	return pd.geometry.point.new(screenX, screenY)
+end
 
 ---@type symbol[][]
 local board
@@ -162,11 +214,15 @@ local Straight = {
 	BottomLeftToTopRight = 8
 }
 
----@alias boardCoordinate 1 | 2 | 3
+---@alias boardDimension 1 | 2 | 3
+
+---@class boardCoordinate
+---@field x boardDimension
+---@field y boardDimension
 
 ---Returns all the straights that include a given position on the board.
----@param x boardCoordinate
----@param y boardCoordinate
+---@param x boardDimension
+---@param y boardDimension
 ---@return straight[]
 function GetStraightsForPosition(x, y)
 	local straights = {}
@@ -295,33 +351,45 @@ function DrawBoard()
 	someonesTurn = true
 end
 
-function DrawNought()
-	pencil.thickness = 5
-	someonesTurn = false
+---creates a function that can then be passed to pencil action
+---@param x boardDimension
+---@param y boardDimension
+---@return function
+function DrawNought(x, y)
+	return function()
+		pencil.thickness = 5
+		someonesTurn = false
 
-	local centre = GetCursorPosition()
+		local centre = ConvertBoardCoordinateToScreenSpace({ x = x, y = y })
 
-	pencil:DrawCircle(centre, NOUGHT_RADIUS)
-	coroutine.yield()
+		pencil:DrawCircle(centre, NOUGHT_RADIUS)
+		coroutine.yield()
 
-	someonesTurn = true
-	pencil.drawing = false
+		someonesTurn = true
+		pencil.drawing = false
+	end
 end
 
-function DrawCross()
-	pencil.thickness = 5
-	someonesTurn = false
+---creates a function that can then be passed to the pencil action
+---@param x boardDimension
+---@param y boardDimension
+---@return function
+function DrawCross(x, y)
+	return function()
+		pencil.thickness = 5
+		someonesTurn = false
 
-	local centre = GetCursorPosition()
+		local centre = ConvertBoardCoordinateToScreenSpace({ x = x, y = y })
 
-	pencil:DrawLine(centre.x - 17, centre.y - 24, centre.x + 15, centre.y + 21)
-	coroutine.yield()
+		pencil:DrawLine(centre.x - 17, centre.y - 24, centre.x + 15, centre.y + 21)
+		coroutine.yield()
 
-	pencil:DrawLine(centre.x - 22, centre.y + 22, centre.x + 18, centre.y - 18)
-	coroutine.yield()
+		pencil:DrawLine(centre.x - 22, centre.y + 22, centre.x + 18, centre.y - 18)
+		coroutine.yield()
 
-	someonesTurn = true
-	pencil.drawing = false
+		someonesTurn = true
+		pencil.drawing = false
+	end
 end
 
 ---@param straight straight
@@ -350,24 +418,30 @@ function DrawWinningLine(straight)
 	coroutine.yield()
 end
 
+function EraseCanvas()
+	canvas:clear(gfx.kColorWhite)
+end
+
+function RestartGame()
+	EraseCanvas()
+	NewGame()
+end
+
 function Setup()
 	-- set the game up
 	pd.display.setRefreshRate(50)
+
+	-- set up game menu
+	local menu = playdate.getSystemMenu()
+
+	menu:addMenuItem("Restart game", function()
+		RestartGame()
+	end)
 
 	-- setup canvas
 	canvas = gfx.image.new(SCREEN_WIDTH, SCREEN_HEIGHT)
 
 	gfx.setFont(font)
-
-	-- setup cursor
-	cursor = gfx.sprite.new()
-	local r = 5
-	cursor:setSize(r * 2, r * 2)
-	function cursor:draw()
-		gfx.drawCircleAtPoint(r, r, r)
-	end
-
-	cursor:add()
 
 	gfx.sprite.setBackgroundDrawingCallback(
 		function()
@@ -396,6 +470,10 @@ function NewGame(startState)
 	-- setup pencil
 	pencil = Pencil(0, 0)
 	pencil:add()
+
+	-- setup cursor
+	cursor = Cursor(1, 1)
+	cursor:add()
 
 	-- draw a board
 	pencilAction = coroutine.create(DrawBoard)
@@ -444,29 +522,25 @@ function pd.update()
 	if someonesTurn then
 		if playingAi and currentTurn == aiSymbol then
 			local aiMove = ChooseAiMove()
-			-- TODO not good that we need to set the highlightedX here
-			highlightedX = aiMove.x
-			highlightedY = aiMove.y
-
-			PlayOnSpace(highlightedX, highlightedY, aiSymbol)
+			PlayOnSpace(aiMove.x, aiMove.y, aiSymbol)
 			FlipTurn()
 		end
 
 		if pd.buttonJustPressed(pd.kButtonUp) then
-			MoveCursor("up")
+			cursor:MoveInDirection("up")
 		end
 		if pd.buttonJustPressed(pd.kButtonDown) then
-			MoveCursor("down")
+			cursor:MoveInDirection("down")
 		end
 		if pd.buttonJustPressed(pd.kButtonLeft) then
-			MoveCursor("left")
+			cursor:MoveInDirection("left")
 		end
 		if pd.buttonJustPressed(pd.kButtonRight) then
-			MoveCursor("right")
+			cursor:MoveInDirection("right")
 		end
 
-		if pd.buttonJustPressed(pd.kButtonA) and SpaceIsFree(highlightedX, highlightedY) then
-			PlayOnSpace(highlightedX, highlightedY, playerSymbol)
+		if pd.buttonJustPressed(pd.kButtonA) and SpaceIsFree(cursor.boardX, cursor.boardY) then
+			PlayOnSpace(cursor.boardX, cursor.boardY, playerSymbol)
 			FlipTurn()
 		end
 
@@ -517,9 +591,9 @@ end
 function PlayOnSpace(x, y, symbol)
 	board[x][y] = symbol
 	if symbol == "x" then
-		pencilAction = coroutine.create(DrawCross)
+		pencilAction = coroutine.create(DrawCross(x, y))
 	else
-		pencilAction = coroutine.create(DrawNought)
+		pencilAction = coroutine.create(DrawNought(x, y))
 	end
 end
 
@@ -527,40 +601,19 @@ function SpaceIsFree(x, y)
 	return board[x][y] == "-"
 end
 
+---Checks whether a given x and y coordinate lies on the board
+---@param x integer
+---@param y integer
+---@return boolean
 function IsOutOfBound(x, y)
 	return x < 1 or x > 3 or y < 1 or y > 3
 end
 
----@alias direction "up" | "down" | "left" | "right"
-
----@param direction direction
-function MoveCursor(direction)
-	local newX = highlightedX
-	local newY = highlightedY
-
-	repeat
-		if direction == "up" then
-			newY -= 1
-		elseif direction == "down" then
-			newY += 1
-		elseif direction == "left" then
-			newX -= 1
-		elseif direction == "right" then
-			newX += 1
-		end
-		if IsOutOfBound(newX, newY) then return end
-	until SpaceIsFree(newX, newY)
-
-	highlightedX = newX
-	highlightedY = newY
-
-	local cursorPosition = GetCursorPosition()
-	cursor:moveTo(cursorPosition)
-	pencil:moveTo(cursorPosition.x, cursorPosition.y)
-end
-
+---Based on the current state of the board, chooses a move for the AI
+---@return boardCoordinate
 function ChooseAiMove()
 	-- SOURCE: https://en.wikipedia.org/wiki/Tic-tac-toe#Strategy
+	---@type boardCoordinate[]
 	local availableMoves = {}
 
 	for x = 1, 3, 1 do
@@ -650,13 +703,6 @@ function ChooseAiMove()
 	local chosenMove = availableMoves[math.random(1, #availableMoves)]
 
 	return chosenMove
-end
-
-function GetCursorPosition()
-	local cursorX = 125 + (highlightedX - 1) * 70
-	local cursorY = 45 + (highlightedY - 1) * 60
-
-	return pd.geometry.point.new(cursorX, cursorY)
 end
 
 Setup()
