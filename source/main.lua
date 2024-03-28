@@ -148,18 +148,16 @@ function Cursor:MoveInDirection(direction)
 	local newX = self.boardX
 	local newY = self.boardY
 
-	repeat
-		if direction == "up" then
-			newY -= 1
-		elseif direction == "down" then
-			newY += 1
-		elseif direction == "left" then
-			newX -= 1
-		elseif direction == "right" then
-			newX += 1
-		end
-		if IsOutOfBound(newX, newY) then return end
-	until SpaceIsFree(newX, newY)
+	if direction == "up" then
+		newY -= 1
+	elseif direction == "down" then
+		newY += 1
+	elseif direction == "left" then
+		newX -= 1
+	elseif direction == "right" then
+		newX += 1
+	end
+	if IsOutOfBound(newX, newY) then return end
 
 	self.boardX = newX
 	self.boardY = newY
