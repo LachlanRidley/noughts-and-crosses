@@ -4,6 +4,12 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "compile images",
+      "type": "shell",
+      "command": "Aseprite.exe support/nought.aseprite --batch --save-as source/nought.png; aseprite.exe support/cross.aseprite --batch --save-as source/cross.png",
+      "problemMatcher": []
+    },
+    {
       "label": "build",
       "type": "shell",
       "windows": {
