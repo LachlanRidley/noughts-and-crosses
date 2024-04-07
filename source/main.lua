@@ -281,7 +281,10 @@ local pencil
 
 function Pencil:update()
 	if self.animator:ended() then
-		if coroutine.status(pencilAction) == "dead" then return end -- TODO if there's no actions queued then the pencil should just drift towards the cursor
+		if coroutine.status(pencilAction) == "dead" then return end
+
+		-- TODO if there's no actions queued then the pencil should just drift towards the cursor
+
 		coroutine.resume(pencilAction)
 	end
 
@@ -304,7 +307,8 @@ function Pencil:DrawLine(x1, y1, x2, y2)
 	local initialPoint = pd.geometry.point.new(x1, y1)
 	local goalPoint = pd.geometry.point.new(x2, y2)
 
-	self.animator = gfx.animator.new(1000, initialPoint, goalPoint, pd.easingFunctions.inOutQuint)
+	self.animator = gfx.animator.new(1000,
+		initialPoint, goalPoint, pd.easingFunctions.inOutQuint)
 	self.drawing = true
 	self:moveTo(x1, y1)
 
@@ -312,7 +316,8 @@ function Pencil:DrawLine(x1, y1, x2, y2)
 end
 
 function Pencil:DrawPoly(poly)
-	self.animator = gfx.animator.new(poly:length() * 10, poly, pd.easingFunctions.inOutQuint)
+	self.animator = gfx.animator.new(poly:length() * 10, poly,
+		pd.easingFunctions.inOutQuint)
 	self.drawing = true
 	self:moveTo(poly:getPointAt(1))
 
@@ -331,7 +336,8 @@ function Pencil:MovePencil(x, y)
 	local initialPoint = pd.geometry.point.new(self.x, self.y)
 	local goalPoint = pd.geometry.point.new(x, y)
 
-	self.animator = gfx.animator.new(500, initialPoint, goalPoint, pd.easingFunctions.inOutQuint)
+	self.animator = gfx.animator.new(500, initialPoint, goalPoint,
+		pd.easingFunctions.inOutQuint)
 end
 
 ---Queues a circle draw
@@ -387,7 +393,11 @@ function Cursor:MoveInDirection(direction)
 	self.boardX = newX
 	self.boardY = newY
 
-	local cursorPosition = ConvertBoardCoordinateToScreenSpace({ x = self.boardX, y = self.boardY })
+	local cursorPosition = ConvertBoardCoordinateToScreenSpace({
+		x = self.boardX,
+		y =
+			self.boardY
+	})
 	self:moveTo(cursorPosition.x, cursorPosition.y)
 end
 
@@ -398,7 +408,11 @@ function Cursor:MoveToBoardCoordinate(x, y)
 	self.boardX = x
 	self.boardY = y
 
-	local cursorPosition = ConvertBoardCoordinateToScreenSpace({ x = self.boardX, y = self.boardY })
+	local cursorPosition = ConvertBoardCoordinateToScreenSpace({
+		x = self.boardX,
+		y =
+			self.boardY
+	})
 	self:moveTo(cursorPosition.x, cursorPosition.y)
 end
 
@@ -417,7 +431,8 @@ local someonesTurn = false
 ---@type Cursor
 local cursor
 
----Takes a cursor and converts it's board coordinate into screen space so that it can be drawn
+--- Takes a cursor and converts it's board coordinate into screen space so that
+--- it can be drawn
 ---@param coordinate boardCoordinate
 ---@return _Point
 function ConvertBoardCoordinateToScreenSpace(coordinate)
@@ -615,10 +630,12 @@ function DrawCross(x, y)
 
 		local centre = ConvertBoardCoordinateToScreenSpace({ x = x, y = y })
 
-		pencil:DrawLine(centre.x - 17, centre.y - 24, centre.x + 15, centre.y + 21)
+		pencil:DrawLine(centre.x - 17, centre.y - 24, centre.x + 15,
+			centre.y + 21)
 		coroutine.yield()
 
-		pencil:DrawLine(centre.x - 22, centre.y + 22, centre.x + 18, centre.y - 18)
+		pencil:DrawLine(centre.x - 22, centre.y + 22, centre.x + 18,
+			centre.y - 18)
 		coroutine.yield()
 
 		someonesTurn = true
@@ -819,7 +836,8 @@ end
 
 function CheckForWinner()
 	for _, straight in pairs(Straight) do
-		if CountForStraight(straight, "x") == 3 or CountForStraight(straight, "o") == 3 then
+		if CountForStraight(straight, "x") == 3 or
+			CountForStraight(straight, "o") == 3 then
 			DrawWinningLine(straight)
 		end
 	end
@@ -827,7 +845,8 @@ end
 
 function pd.update()
 	if state == GameState.SplashScreen then
-		if pd.buttonJustPressed(pd.kButtonA) or pd.buttonJustPressed(pd.kButtonB) then
+		if pd.buttonJustPressed(pd.kButtonA)
+			or pd.buttonJustPressed(pd.kButtonB) then
 			NewGame()
 		end
 	elseif state == GameState.Playing then
@@ -855,7 +874,8 @@ function pd.update()
 				cursor:MoveInDirection("right")
 			end
 
-			if pd.buttonJustPressed(pd.kButtonA) and SpaceIsFree(cursor.boardX, cursor.boardY) then
+			if pd.buttonJustPressed(pd.kButtonA)
+				and SpaceIsFree(cursor.boardX, cursor.boardY) then
 				PlayOnSpace(cursor.boardX, cursor.boardY, playerSymbol)
 				FlipTurn()
 			end
@@ -866,27 +886,34 @@ function pd.update()
 		end
 
 		if not pd.isCrankDocked() then
-			-- TODO erasing should always starts from the top, no matter the start position of the crank
+			-- TODO erasing should always starts from the top, no matter the
+			-- start position of the crank
 			-- TODO erasing the whole screen should take multiple turns of the crank
 			-- TODO erasing the screen should happen in a back and forth motion (as if you're rubbing it out)
 
 			local crankPosition = pd.getCrankPosition()
-			local crankPositionToScreenY = math.floor((crankPosition / 360) * SCREEN_HEIGHT);
+			local crankPositionToScreenY = math.floor((crankPosition / 360) *
+				SCREEN_HEIGHT);
 
 			if previousEraserY == nil then
-				-- this means we've only just started erasing so set the starting pos to the current crank pos
+				-- this means we've only just started erasing so set the
+				-- starting pos to the current crank pos
 				previousEraserY = crankPositionToScreenY
 			end
 
-			local erasedSectionY = math.min(previousEraserY, crankPositionToScreenY)
-			local erasedSectionBottomY = math.max(previousEraserY, crankPositionToScreenY)
+			local erasedSectionY = math.min(previousEraserY,
+				crankPositionToScreenY)
+			local erasedSectionBottomY = math.max(previousEraserY,
+				crankPositionToScreenY)
 
-			local erasedSectionHeight = math.ceil(math.abs(erasedSectionY - erasedSectionBottomY))
+			local erasedSectionHeight = math.ceil(math.abs(erasedSectionY -
+				erasedSectionBottomY))
 
 			if erasedSectionHeight > 0 then
 				gfx.lockFocus(canvas)
 				gfx.setColor(gfx.kColorWhite)
-				gfx.fillRect(0, erasedSectionY, SCREEN_WIDTH, erasedSectionHeight)
+				gfx.fillRect(
+					0, erasedSectionY, SCREEN_WIDTH, erasedSectionHeight)
 				gfx.unlockFocus()
 
 				previousEraserY = previousEraserY + erasedSectionHeight
@@ -901,7 +928,8 @@ function pd.update()
 	timer.updateTimers()
 end
 
---- Plays a symbol in the provided space. Currently assumes that you have already checked that the space is free.
+--- Plays a symbol in the provided space. Currently assumes that you have
+--- already checked that the space is free.
 ---@param x 1 | 2 | 3
 ---@param y 1 | 2 | 3
 ---@param symbol symbol
@@ -946,7 +974,8 @@ function ChooseAiMove()
 
 		for _, straight in ipairs(straights) do
 			if CountForStraight(straight, aiSymbol) == 2 then
-				-- this move is on a straight which already has two "o" so playing here is a win
+				-- this move is on a straight which already has two "o"
+				-- so playing here is a win
 				print("I can win so I will")
 				return move
 			end
@@ -966,15 +995,17 @@ function ChooseAiMove()
 	end
 
 	for _, move in ipairs(availableMoves) do
-		-- forking means playing any move which will convert 2 unblocked straights into a winnable straight
-		-- that's actually not complicated. Any move with 2 or more unblocked straights is a fork
+		-- forking means playing any move which will convert 2 unblocked
+		-- straights into a winnable straight that's actually not complicated.
+		-- Any move with 2 or more unblocked straights is a fork
 		-- get all my unblocked straights (straights with 1 "o" and 0 "x")
 		-- if there are 2 or more then play here to create a fork
 		local straights = GetStraightsForPosition(move.x, move.y)
 
 		local unblockedStraights = {}
 		for _, straight in ipairs(straights) do
-			if CountForStraight(straight, aiSymbol) == 1 and CountForStraight(straight, playerSymbol) == 0 then
+			if CountForStraight(straight, aiSymbol) == 1
+				and CountForStraight(straight, playerSymbol) == 0 then
 				table.insert(unblockedStraights, straight)
 			end
 		end
@@ -987,11 +1018,19 @@ function ChooseAiMove()
 
 	-- TODO block opponents fork
 	-- so this is the most complicated one.
-	-- the logic is also slightly different here. Normally we can just look for a good move until we find one and take it but here we have to anticipate the player's move and determine which is the most valuable one to block.
-	-- we have to identify any moves that on the player's turn will create a fork
+	-- the logic is also slightly different here. Normally we can just look
+	-- for a good move until we find one and take it but here we have to
+	-- anticipate the player's move and determine which is the most valuable
+	-- one to block.
+	-- we have to identify any moves that on the player's turn will create a
+	-- fork
 	-- if there's only one fork, then we block it, easy
-	-- if there's a move that can block all forks, then we should take it as long as it will produce a winnable straight (which the player will then be forced to block)
-	-- if no such move exists, then we have to stall. Pick any move which will produce a winning straight but not force the player to make a fork when they defend against it
+	-- if there's a move that can block all forks, then we should take it as
+	-- long as it will produce a winnable straight (which the player will then
+	-- be forced to block)
+	-- if no such move exists, then we have to stall. Pick any move which will
+	-- produce a winning straight but not force the player to make a fork when
+	-- they defend against it
 
 	for _, move in pairs(availableMoves) do
 		if move.x == 2 and move.y == 2 then
@@ -1003,7 +1042,8 @@ function ChooseAiMove()
 	-- TODO opposite corner
 
 	for _, move in pairs(availableMoves) do
-		if ((move.x == 1 or move.x == 3) and move.y ~= 2) or ((move.y == 1 or move.y == 3) and move.x ~= 2) then
+		if ((move.x == 1 or move.x == 3) and move.y ~= 2)
+			or ((move.y == 1 or move.y == 3) and move.x ~= 2) then
 			print("I'll take an empty corner plz")
 			return move
 		end
@@ -1016,7 +1056,8 @@ function ChooseAiMove()
 		end
 	end
 
-	print("damn, I don't know what to do. I'll choose an available move at random")
+	print(
+		"damn, I don't know what to do. I'll choose a move at random")
 	local chosenMove = availableMoves[math.random(1, #availableMoves)]
 
 	return chosenMove
