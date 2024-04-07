@@ -238,6 +238,10 @@ local GameState = {
 	Playing = 2
 }
 
+local scores = {
+	x = 0, o = 0
+}
+
 ---@type _Image
 local canvas
 
@@ -247,9 +251,6 @@ local pencilScratch = snd.sampleplayer.new("scratch")
 
 ---@type _Image?
 local pencilImage = gfx.image.new("pencil")
-
----@type _Font
-local font = gfx.font.new("Cameltry")
 
 ---@type integer | nil
 local previousEraserY = nil
@@ -527,6 +528,19 @@ function CountForStraight(straight, symbol)
 	error("Invalid straight provided")
 end
 
+---Checks if the given straight has all three of the same symbol
+---@param straight straight the straight to check
+---@return symbol | nil # the winning symbol or nil if the straight does not have a winner
+function GetWinnerInStraight(straight)
+	if CountForStraight(straight, "x") == 3 then
+		return "x"
+	elseif CountForStraight(straight, "o") == 3 then
+		return "o"
+	end
+
+	return nil
+end
+
 function CountInRow(row, symbol)
 	local count = 0
 	for col = 1, 3, 1 do
@@ -773,8 +787,6 @@ function Setup()
 	-- setup canvas
 	canvas = gfx.image.new(SCREEN_WIDTH, SCREEN_HEIGHT)
 
-	gfx.setFont(font)
-
 	gfx.sprite.setBackgroundDrawingCallback(
 		function()
 			canvas:draw(0, 0)
@@ -836,9 +848,11 @@ end
 
 function CheckForWinner()
 	for _, straight in pairs(Straight) do
-		if CountForStraight(straight, "x") == 3 or
-			CountForStraight(straight, "o") == 3 then
+		local winningSymbol = GetWinnerInStraight(straight)
+
+		if winningSymbol ~= nil then
 			DrawWinningLine(straight)
+			scores[winningSymbol] = 1
 		end
 	end
 end
@@ -926,6 +940,9 @@ function pd.update()
 	gfx.sprite.redrawBackground()
 	gfx.sprite.update()
 	timer.updateTimers()
+
+	gfx.drawTextAligned("X: " .. scores.x .. " - O: " .. scores.o, SCREEN_WIDTH / 2, SCREEN_HEIGHT - 30,
+		kTextAlignment.center)
 end
 
 --- Plays a symbol in the provided space. Currently assumes that you have
