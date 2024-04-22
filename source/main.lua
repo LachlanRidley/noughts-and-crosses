@@ -261,6 +261,7 @@ function Cursor:init(x, y)
 
 	self.boardX = x
 	self.boardY = y
+	self:UpdatePositionOnBoard()
 
 	local r = 5
 	self:setSize(r * 2, r * 2)
@@ -289,7 +290,10 @@ function Cursor:MoveInDirection(direction)
 
 	self.boardX = newX
 	self.boardY = newY
+	self:UpdatePositionOnBoard()
+end
 
+function Cursor:UpdatePositionOnBoard()
 	local cursorPosition = ConvertBoardCoordinateToScreenSpace({
 		x = self.boardX,
 		y =
@@ -760,6 +764,30 @@ function pd.update()
 	elseif state == GameState.Playing then
 		if pencil:IsDone() and someonesTurn then
 			CheckForWinner()
+		end
+
+		if pencil:HasNoQueuedActions() then
+			if math.abs(pencil.x - cursor.x) > 5 then
+				if (pencil.x < cursor.x) then
+					pencil:moveBy(5, 0)
+				else
+					pencil:moveBy(-5, 0)
+				end
+			end
+
+			if math.abs(pencil.y - cursor.y) > 5 then
+				if (pencil.y < cursor.y) then
+					pencil:moveBy(0, 5)
+				else
+					pencil:moveBy(0, -5)
+				end
+			end
+
+			-- if pencilPos.y < cursorPos.y then
+			-- 	pencil:moveBy(0, 5)
+			-- else
+			-- 	pencil:moveBy(0, -5)
+			-- end
 		end
 
 		if someonesTurn then

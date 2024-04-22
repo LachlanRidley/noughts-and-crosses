@@ -80,6 +80,10 @@ function Pencil:IsDone()
     return self.animator:ended()
 end
 
+function Pencil:HasNoQueuedActions()
+    return coroutine.status(self.action) == "dead"
+end
+
 ---Raise the pencil and move it to a position
 ---@param x integer
 ---@param y integer
