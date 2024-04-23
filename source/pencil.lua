@@ -47,28 +47,8 @@ function Pencil:update()
         self:moveTo(nextPoint.x, nextPoint.y)
     end
 
-    if self:HasNoQueuedActions() and self.goal ~= nil then
-        if math.abs(self.x - self.goal.x) > 5 then
-            if (self.x < self.goal.x) then
-                self:moveBy(5, 0)
-            else
-                self:moveBy(-5, 0)
-            end
-        end
-
-        if math.abs(self.y - self.goal.y) > 5 then
-            if (self.y < self.goal.y) then
-                self:moveBy(0, 5)
-            else
-                self:moveBy(0, -5)
-            end
-        end
-
-        local distanceToGoal = pd.geometry.distanceToPoint(self.x, self.y, self.goal.x, self.goal.y)
-
-        if distanceToGoal <= 5 then
-            self.goal = nil
-        end
+    if self:HasNoQueuedActions() then
+        self:moveTowardsGoal()
     end
 
     if self.drawing then
@@ -77,6 +57,27 @@ function Pencil:update()
         gfx.setLineCapStyle(gfx.kLineCapStyleRound)
         gfx.drawLine(previousX, previousY, self.x, self.y)
         gfx.unlockFocus()
+    end
+end
+
+function Pencil:moveTowardsGoal()
+    if self.goal == nil then return end
+
+    local goalPosVector = pd.geometry.vector2D.new(self.goal.x, self.goal.y)
+    local currentPosVector = pd.geometry.vector2D.new(self.x, self.y)
+
+    ---@type _Vector2D
+    local travelVector = goalPosVector - currentPosVector
+
+    local distanceToGoal = travelVector:magnitude()
+
+    if distanceToGoal <= 5 then
+        self.goal = nil
+    else
+        travelVector:normalize()
+        travelVector:scale(5)
+
+        self:moveBy(travelVector.dx, travelVector.dy)
     end
 end
 
