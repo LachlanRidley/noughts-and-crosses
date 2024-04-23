@@ -311,8 +311,7 @@ function Cursor:MoveToBoardCoordinate(x, y)
 
 	local cursorPosition = ConvertBoardCoordinateToScreenSpace({
 		x = self.boardX,
-		y =
-			self.boardY
+		y = self.boardY
 	})
 	self:moveTo(cursorPosition.x, cursorPosition.y)
 end
@@ -766,30 +765,6 @@ function pd.update()
 			CheckForWinner()
 		end
 
-		if pencil:HasNoQueuedActions() then
-			if math.abs(pencil.x - cursor.x) > 5 then
-				if (pencil.x < cursor.x) then
-					pencil:moveBy(5, 0)
-				else
-					pencil:moveBy(-5, 0)
-				end
-			end
-
-			if math.abs(pencil.y - cursor.y) > 5 then
-				if (pencil.y < cursor.y) then
-					pencil:moveBy(0, 5)
-				else
-					pencil:moveBy(0, -5)
-				end
-			end
-
-			-- if pencilPos.y < cursorPos.y then
-			-- 	pencil:moveBy(0, 5)
-			-- else
-			-- 	pencil:moveBy(0, -5)
-			-- end
-		end
-
 		if someonesTurn then
 			if playingAi and currentTurn == aiSymbol then
 				local aiMove = ChooseAiMove()
@@ -809,6 +784,8 @@ function pd.update()
 			if pd.buttonJustPressed(pd.kButtonRight) then
 				cursor:MoveInDirection("right")
 			end
+
+			pencil:SetGoal(cursor.x, cursor.y)
 
 			if pd.buttonJustPressed(pd.kButtonA)
 				and SpaceIsFree(cursor.boardX, cursor.boardY) then

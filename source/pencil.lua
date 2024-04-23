@@ -11,6 +11,7 @@ local pencilScratch = snd.sampleplayer.new("scratch")
 ---@field thickness integer
 ---@field private animator _Animator
 ---@field private action thread
+---@field private goal _Point | nil
 ---@overload fun(x: integer, y: integer, canvas: _Image): Pencil
 Pencil = class('Pencil').extends(playdate.graphics.sprite) or Pencil
 
@@ -33,18 +34,42 @@ end
 
 function Pencil:update()
     if self.animator:ended() then
-        if coroutine.status(self.action) == "dead" then return end
-
-        -- TODO if there's no actions queued then the pencil should just drift towards the cursor
-
-        coroutine.resume(self.action)
+        if coroutine.status(self.action) ~= "dead" then
+            coroutine.resume(self.action)
+        end
     end
 
     local previousX = self.x
     local previousY = self.y
 
-    local nextPoint = self.animator:currentValue();
-    self:moveTo(nextPoint.x, nextPoint.y)
+    if not self.animator:ended() then
+        local nextPoint = self.animator:currentValue();
+        self:moveTo(nextPoint.x, nextPoint.y)
+    end
+
+    if self:HasNoQueuedActions() and self.goal ~= nil then
+        if math.abs(self.x - self.goal.x) > 5 then
+            if (self.x < self.goal.x) then
+                self:moveBy(5, 0)
+            else
+                self:moveBy(-5, 0)
+            end
+        end
+
+        if math.abs(self.y - self.goal.y) > 5 then
+            if (self.y < self.goal.y) then
+                self:moveBy(0, 5)
+            else
+                self:moveBy(0, -5)
+            end
+        end
+
+        local distanceToGoal = pd.geometry.distanceToPoint(self.x, self.y, self.goal.x, self.goal.y)
+
+        if distanceToGoal <= 5 then
+            self.goal = nil
+        end
+    end
 
     if self.drawing then
         gfx.lockFocus(self.canvas)
@@ -94,6 +119,13 @@ function Pencil:MovePencil(x, y)
 
     self.animator = gfx.animator.new(500, initialPoint, goalPoint,
         pd.easingFunctions.inOutQuint)
+end
+
+---Set a location for the pencil to move towards. Is overridden by queued actions
+---@param x integer
+---@param y integer
+function Pencil:SetGoal(x, y)
+    self.goal = pd.geometry.point.new(x, y)
 end
 
 ---Queues a circle draw
