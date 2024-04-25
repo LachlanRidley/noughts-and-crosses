@@ -12,24 +12,35 @@ local pencilScratch = snd.sampleplayer.new("scratch")
 ---@field private animator _Animator
 ---@field private action thread
 ---@field private goal _Point | nil
+---@field private shadow _Sprite
 ---@overload fun(x: integer, y: integer, canvas: _Image): Pencil
 Pencil = class('Pencil').extends(playdate.graphics.sprite) or Pencil
+
+---@type _Image?
+local pencilShadowImage = gfx.image.new("pencil-shadow")
 
 ---@type _Image?
 local pencilImage = gfx.image.new("pencil")
 
 function Pencil:init(x, y, canvas)
     Pencil.super.init(self)
-    if pencilImage == nil then
-        print("Failed to load pencil image")
+    if pencilImage == nil or pencilShadowImage == nil then
+        print("Failed to load images")
         return
     end
+
     self:setImage(pencilImage)
     self:moveTo(x, y)
     self:setCenter(0, 1)
     self.drawing = false
     self.thickness = 2
     self.canvas = canvas
+
+    local ditheredPencilShadowImage = pencilShadowImage:fadedImage(0.5, gfx.image.kDitherTypeBayer2x2)
+    self.shadow = gfx.sprite.new(ditheredPencilShadowImage)
+    self.shadow:setCenter(0, 1)
+    self.shadow:moveTo(self.x, self.y)
+    self.shadow:add()
 end
 
 function Pencil:update()
@@ -58,6 +69,8 @@ function Pencil:update()
         gfx.drawLine(previousX, previousY, self.x, self.y)
         gfx.unlockFocus()
     end
+
+    self.shadow:moveTo(self.x, self.y)
 end
 
 function Pencil:moveTowardsGoal()
@@ -145,4 +158,9 @@ end
 function Pencil:Queue(fun)
     self.action = coroutine.create(fun)
     coroutine.resume(self.action)
+end
+
+function Pencil:remove()
+    self.shadow:remove();
+    Pencil.super.remove(self)
 end
