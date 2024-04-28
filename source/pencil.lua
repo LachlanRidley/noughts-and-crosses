@@ -10,6 +10,8 @@ local pencilScratch = snd.sampleplayer.new("scratch")
 ---@field drawing boolean
 ---@field thickness integer
 ---@field private animator _Animator
+---@field private raisePencilAnimator _Animator | nil
+---@field private groundOffset number
 ---@field private action thread
 ---@field private goal _Point | nil
 ---@field private shadow _Sprite
@@ -33,6 +35,7 @@ function Pencil:init(x, y, canvas)
     self:moveTo(x, y)
     self:setCenter(0, 1)
     self.drawing = false
+    self.groundOffset = 10 -- TODO extract magic number
     self.thickness = 2
     self.canvas = canvas
 
@@ -53,12 +56,24 @@ function Pencil:update()
     local previousX = self.x
     local previousY = self.y
 
-    local shadowXOffset = 0
-    local pencilYOffset = 0
-    if not self.drawing then
-        shadowXOffset = 10
-        pencilYOffset = -10
+    -- start a new pencil animator if needed
+    if not self.drawing and self.raisePencilAnimator == nil and self.groundOffset < 10 then
+        self.raisePencilAnimator = gfx.animator.new(300, self.groundOffset, 10)
+    elseif self.drawing and self.raisePencilAnimator == nil and self.groundOffset > 0 then
+        self.raisePencilAnimator = gfx.animator.new(300, self.groundOffset, 0)
     end
+
+    -- update ground offset with animator
+    if self.raisePencilAnimator ~= nil then
+        self.groundOffset = self.raisePencilAnimator:currentValue();
+
+        if self.raisePencilAnimator:ended() then
+            self.raisePencilAnimator = nil
+        end
+    end
+
+    local shadowXOffset = self.groundOffset
+    local pencilYOffset = -self.groundOffset
 
     if not self.animator:ended() then
         local nextPoint = self.animator:currentValue();
@@ -77,7 +92,7 @@ function Pencil:update()
         gfx.unlockFocus()
     end
 
-    self.shadow:moveTo(self.x + shadowXOffset, self.y - pencilYOffset)
+    self.shadow:moveTo(self.x + shadowXOffset, self.y - pencilYOffset) -- TODO it's gross we have to subtract pencil offset here. We should save canonical coordinates which we offset both sprites from
 end
 
 function Pencil:moveTowardsGoal()
