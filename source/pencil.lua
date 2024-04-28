@@ -53,9 +53,16 @@ function Pencil:update()
     local previousX = self.x
     local previousY = self.y
 
+    local shadowXOffset = 0
+    local pencilYOffset = 0
+    if not self.drawing then
+        shadowXOffset = 10
+        pencilYOffset = -10
+    end
+
     if not self.animator:ended() then
         local nextPoint = self.animator:currentValue();
-        self:moveTo(nextPoint.x, nextPoint.y)
+        self:moveTo(nextPoint.x, nextPoint.y + pencilYOffset)
     end
 
     if self:HasNoQueuedActions() then
@@ -70,7 +77,7 @@ function Pencil:update()
         gfx.unlockFocus()
     end
 
-    self.shadow:moveTo(self.x, self.y)
+    self.shadow:moveTo(self.x + shadowXOffset, self.y - pencilYOffset)
 end
 
 function Pencil:moveTowardsGoal()
