@@ -489,25 +489,25 @@ end
 function DrawBoard()
 	someonesTurn = false
 
-	pencil:DrawLine(160, 21, 156, 187)
+	pencil:drawLine(160, 21, 156, 187)
 	coroutine.yield()
 
-	pencil:MovePencil(231, 19)
+	pencil:movePencil(231, 19)
 	coroutine.yield()
 
-	pencil:DrawLine(231, 19, 225, 190)
+	pencil:drawLine(231, 19, 225, 190)
 	coroutine.yield()
 
-	pencil:MovePencil(96, 74)
+	pencil:movePencil(96, 74)
 	coroutine.yield()
 
-	pencil:DrawLine(96, 74, 291, 76)
+	pencil:drawLine(96, 74, 291, 76)
 	coroutine.yield()
 
-	pencil:MovePencil(95, 135)
+	pencil:movePencil(95, 135)
 	coroutine.yield()
 
-	pencil:DrawLine(95, 135, 293, 138)
+	pencil:drawLine(95, 135, 293, 138)
 	coroutine.yield()
 
 	someonesTurn = true
@@ -524,7 +524,7 @@ function DrawNought(x, y)
 
 		local centre = ConvertBoardCoordinateToScreenSpace({ x = x, y = y })
 
-		pencil:DrawCircle(centre, NOUGHT_RADIUS)
+		pencil:drawCircle(centre, NOUGHT_RADIUS)
 		coroutine.yield()
 
 		someonesTurn = true
@@ -543,11 +543,11 @@ function DrawCross(x, y)
 
 		local centre = ConvertBoardCoordinateToScreenSpace({ x = x, y = y })
 
-		pencil:DrawLine(centre.x - 17, centre.y - 24, centre.x + 15,
+		pencil:drawLine(centre.x - 17, centre.y - 24, centre.x + 15,
 			centre.y + 21)
 		coroutine.yield()
 
-		pencil:DrawLine(centre.x - 22, centre.y + 22, centre.x + 18,
+		pencil:drawLine(centre.x - 22, centre.y + 22, centre.x + 18,
 			centre.y - 18)
 		coroutine.yield()
 
@@ -562,21 +562,21 @@ function DrawWinningLine(straight)
 	pencil.thickness = 8
 
 	if straight == Straight.TopRow then
-		pencil:DrawLine(89, 46, 301, 48)
+		pencil:drawLine(89, 46, 301, 48)
 	elseif straight == Straight.MiddleRow then
-		pencil:DrawLine(87, 104, 306, 105)
+		pencil:drawLine(87, 104, 306, 105)
 	elseif straight == Straight.BottomRow then
-		pencil:DrawLine(85, 164, 298, 168)
+		pencil:drawLine(85, 164, 298, 168)
 	elseif straight == Straight.LeftColumn then
-		pencil:DrawLine(121, 15, 122, 191)
+		pencil:drawLine(121, 15, 122, 191)
 	elseif straight == Straight.MiddleColumn then
-		pencil:DrawLine(196, 16, 191, 193)
+		pencil:drawLine(196, 16, 191, 193)
 	elseif straight == Straight.RightColumn then
-		pencil:DrawLine(265, 15, 260, 193)
+		pencil:drawLine(265, 15, 260, 193)
 	elseif straight == Straight.TopLeftToBottomRight then
-		pencil:DrawLine(103, 22, 285, 192)
+		pencil:drawLine(103, 22, 285, 192)
 	elseif straight == Straight.BottomLeftToTopRight then
-		pencil:DrawLine(94, 187, 289, 23)
+		pencil:drawLine(94, 187, 289, 23)
 	end
 
 	coroutine.yield()
@@ -585,81 +585,81 @@ end
 function DrawSplashText()
 	pencil.thickness = 4
 
-	pencil:DrawPoly(pd.geometry.polygon.new(table.unpack(n)));
+	pencil:drawPoly(pd.geometry.polygon.new(table.unpack(n)));
 	coroutine.yield()
 
-	pencil:MovePencil(o1[1], o1[2])
+	pencil:movePencil(o1[1], o1[2])
 	coroutine.yield()
 
-	pencil:DrawPoly(pd.geometry.polygon.new(table.unpack(o1)));
+	pencil:drawPoly(pd.geometry.polygon.new(table.unpack(o1)));
 	coroutine.yield()
 
-	pencil:MovePencil(u[1], u[2])
+	pencil:movePencil(u[1], u[2])
 	coroutine.yield()
 
-	pencil:DrawPoly(pd.geometry.polygon.new(table.unpack(u)));
+	pencil:drawPoly(pd.geometry.polygon.new(table.unpack(u)));
 	coroutine.yield()
 
-	pencil:MovePencil(g[1], g[2])
+	pencil:movePencil(g[1], g[2])
 	coroutine.yield()
 
-	pencil:DrawPoly(pd.geometry.polygon.new(table.unpack(g)));
+	pencil:drawPoly(pd.geometry.polygon.new(table.unpack(g)));
 	coroutine.yield()
-	pencil:MovePencil(h[1], h[2])
+	pencil:movePencil(h[1], h[2])
 	coroutine.yield()
-	pencil:DrawPoly(pd.geometry.polygon.new(table.unpack(h)));
+	pencil:drawPoly(pd.geometry.polygon.new(table.unpack(h)));
 	coroutine.yield()
-	pencil:MovePencil(t[1], t[2])
+	pencil:movePencil(t[1], t[2])
 	coroutine.yield()
-	pencil:DrawPoly(pd.geometry.polygon.new(table.unpack(t)));
+	pencil:drawPoly(pd.geometry.polygon.new(table.unpack(t)));
 	coroutine.yield()
-	pencil:MovePencil(t2[1], t2[2])
+	pencil:movePencil(t2[1], t2[2])
 	coroutine.yield()
-	pencil:DrawPoly(pd.geometry.polygon.new(table.unpack(t2)));
+	pencil:drawPoly(pd.geometry.polygon.new(table.unpack(t2)));
 	coroutine.yield()
-	pencil:MovePencil(s0[1], s0[2])
+	pencil:movePencil(s0[1], s0[2])
 	coroutine.yield()
-	pencil:DrawPoly(pd.geometry.polygon.new(table.unpack(s0)));
+	pencil:drawPoly(pd.geometry.polygon.new(table.unpack(s0)));
 	coroutine.yield()
-	pencil:MovePencil(plus[1], plus[2])
-	coroutine.yield()
-
-	pencil:DrawPoly(pd.geometry.polygon.new(table.unpack(plus)));
-	coroutine.yield()
-	pencil:MovePencil(plus2[1], plus2[2])
-	coroutine.yield()
-	pencil:DrawPoly(pd.geometry.polygon.new(table.unpack(plus2)));
+	pencil:movePencil(plus[1], plus[2])
 	coroutine.yield()
 
-	pencil:MovePencil(c[1], c[2])
+	pencil:drawPoly(pd.geometry.polygon.new(table.unpack(plus)));
 	coroutine.yield()
-	pencil:DrawPoly(pd.geometry.polygon.new(table.unpack(c)));
+	pencil:movePencil(plus2[1], plus2[2])
 	coroutine.yield()
-	pencil:MovePencil(r[1], r[2])
+	pencil:drawPoly(pd.geometry.polygon.new(table.unpack(plus2)));
 	coroutine.yield()
-	pencil:DrawPoly(pd.geometry.polygon.new(table.unpack(r)));
+
+	pencil:movePencil(c[1], c[2])
 	coroutine.yield()
-	pencil:MovePencil(o2[1], o2[2])
+	pencil:drawPoly(pd.geometry.polygon.new(table.unpack(c)));
 	coroutine.yield()
-	pencil:DrawPoly(pd.geometry.polygon.new(table.unpack(o2)));
+	pencil:movePencil(r[1], r[2])
 	coroutine.yield()
-	pencil:MovePencil(s1[1], s1[2])
+	pencil:drawPoly(pd.geometry.polygon.new(table.unpack(r)));
 	coroutine.yield()
-	pencil:DrawPoly(pd.geometry.polygon.new(table.unpack(s1)));
+	pencil:movePencil(o2[1], o2[2])
 	coroutine.yield()
-	pencil:MovePencil(s2[1], s2[2])
+	pencil:drawPoly(pd.geometry.polygon.new(table.unpack(o2)));
 	coroutine.yield()
-	pencil:DrawPoly(pd.geometry.polygon.new(table.unpack(s2)));
+	pencil:movePencil(s1[1], s1[2])
 	coroutine.yield()
-	pencil:MovePencil(e[1], e[2])
+	pencil:drawPoly(pd.geometry.polygon.new(table.unpack(s1)));
 	coroutine.yield()
-	pencil:DrawPoly(pd.geometry.polygon.new(table.unpack(e)));
+	pencil:movePencil(s2[1], s2[2])
 	coroutine.yield()
-	pencil:MovePencil(s3[1], s3[2])
+	pencil:drawPoly(pd.geometry.polygon.new(table.unpack(s2)));
 	coroutine.yield()
-	pencil:DrawPoly(pd.geometry.polygon.new(table.unpack(s3)));
+	pencil:movePencil(e[1], e[2])
 	coroutine.yield()
-	pencil:MovePencil(10, 10)
+	pencil:drawPoly(pd.geometry.polygon.new(table.unpack(e)));
+	coroutine.yield()
+	pencil:movePencil(s3[1], s3[2])
+	coroutine.yield()
+	pencil:drawPoly(pd.geometry.polygon.new(table.unpack(s3)));
+	coroutine.yield()
+	pencil:movePencil(10, 10)
 	coroutine.yield()
 end
 
@@ -699,7 +699,7 @@ function Setup()
 	pencil = Pencil(0, 0, canvas)
 	pencil:add()
 
-	pencil:Queue(DrawSplashText)
+	pencil:queue(DrawSplashText)
 end
 
 ---Starts a new game. Can safely be called at any time
@@ -731,7 +731,7 @@ function NewGame(startState)
 	cursor:add()
 
 	-- draw a board
-	pencil:Queue(DrawBoard)
+	pencil:queue(DrawBoard)
 
 	-- if startState ~= nil then
 	-- 	for i = 1, #startState do
@@ -852,9 +852,9 @@ end
 function PlayOnSpace(x, y, symbol)
 	board[x][y] = symbol
 	if symbol == "x" then
-		pencil:Queue(DrawCross(x, y))
+		pencil:queue(DrawCross(x, y))
 	else
-		pencil:Queue(DrawNought(x, y))
+		pencil:queue(DrawNought(x, y))
 	end
 end
 

@@ -48,12 +48,12 @@ function Pencil:init(x, y, canvas)
     self.shadow:add()
 end
 
-function Pencil:StartDrawing()
+function Pencil:startDrawing()
     self.drawing = true
     self.raisePencilAnimator = gfx.animator.new(300, self.groundOffset, 0)
 end
 
-function Pencil:StopDrawing()
+function Pencil:stopDrawing()
     self.drawing = false
     self.raisePencilAnimator = gfx.animator.new(300, self.groundOffset, maxGroundOffset)
 end
@@ -117,22 +117,22 @@ function Pencil:moveTowardsGoal()
     end
 end
 
-function Pencil:DrawLine(x1, y1, x2, y2)
+function Pencil:drawLine(x1, y1, x2, y2)
     local initialPoint = pd.geometry.point.new(x1, y1)
     local goalPoint = pd.geometry.point.new(x2, y2)
 
     self.animator = gfx.animator.new(1000,
         initialPoint, goalPoint, pd.easingFunctions.inOutQuint)
-    self:StartDrawing()
+    self:startDrawing()
     self:moveTo(x1, y1)
 
     pencilScratch:play()
 end
 
-function Pencil:DrawPoly(poly)
+function Pencil:drawPoly(poly)
     self.animator = gfx.animator.new(poly:length() * 10, poly,
         pd.easingFunctions.inOutQuint)
-    self:StartDrawing()
+    self:startDrawing()
     self:moveTo(poly:getPointAt(1))
 
     pencilScratch:play()
@@ -149,8 +149,8 @@ end
 ---Raise the pencil and move it to a position
 ---@param x integer
 ---@param y integer
-function Pencil:MovePencil(x, y)
-    self:StopDrawing()
+function Pencil:movePencil(x, y)
+    self:stopDrawing()
     local initialPoint = pd.geometry.point.new(self.x, self.y)
     local goalPoint = pd.geometry.point.new(x, y)
 
@@ -168,8 +168,8 @@ end
 ---Queues a circle draw
 ---@param centre _Point
 ---@param radius integer
-function Pencil:DrawCircle(centre, radius)
-    self:StartDrawing()
+function Pencil:drawCircle(centre, radius)
+    self:startDrawing()
     self:moveTo(centre.x, centre.y - radius)
 
     local path = pd.geometry.arc.new(centre.x, centre.y, radius, 0, 360)
@@ -178,7 +178,7 @@ function Pencil:DrawCircle(centre, radius)
     pencilScratch:play()
 end
 
-function Pencil:Queue(fun)
+function Pencil:queue(fun)
     self.action = coroutine.create(fun)
     coroutine.resume(self.action)
 end
