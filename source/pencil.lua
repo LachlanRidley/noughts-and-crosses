@@ -59,7 +59,10 @@ function Pencil:stopDrawing()
 end
 
 function Pencil:update()
-    if self.animator:ended() then
+    if self.raisePencilAnimator ~= nil and self.raisePencilAnimator:ended() then
+        self.raisePencilAnimator = nil
+        self.animator:reset() -- TODO this is a bit of a hack, it lets us start both animators at the same time but lets the raisePencilAnimator do its thing first
+    elseif self.animator:ended() then
         if coroutine.status(self.action) ~= "dead" then
             coroutine.resume(self.action)
         end
@@ -76,7 +79,7 @@ function Pencil:update()
     local shadowXOffset = self.groundOffset
     local pencilYOffset = -self.groundOffset
 
-    if not self.animator:ended() then
+    if self.raisePencilAnimator == nil and not self.animator:ended() then
         local nextPoint = self.animator:currentValue();
         self:moveTo(nextPoint.x, nextPoint.y + pencilYOffset)
     end
