@@ -118,11 +118,9 @@ function Pencil:moveTowardsGoal()
 end
 
 function Pencil:drawLine(x1, y1, x2, y2)
-    local initialPoint = pd.geometry.point.new(x1, y1)
-    local goalPoint = pd.geometry.point.new(x2, y2)
+    local line = playdate.geometry.lineSegment.new(x1, y1, x2, y2)
 
-    self.animator = gfx.animator.new(1000,
-        initialPoint, goalPoint, pd.easingFunctions.inOutQuint)
+    self.animator = gfx.animator.new(1000, line, pd.easingFunctions.inOutQuint)
     self:startDrawing()
     self:moveTo(x1, y1)
 
