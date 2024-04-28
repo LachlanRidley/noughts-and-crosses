@@ -2,6 +2,8 @@ local pd <const> = playdate
 local gfx <const> = pd.graphics
 local snd <const> = pd.sound
 
+local maxGroundOffset <const> = 10
+
 local pencilScratch = snd.sampleplayer.new("scratch")
 
 ---@class Pencil: _Sprite
@@ -35,7 +37,7 @@ function Pencil:init(x, y, canvas)
     self:moveTo(x, y)
     self:setCenter(0, 1)
     self.drawing = false
-    self.groundOffset = 10 -- TODO extract magic number
+    self.groundOffset = maxGroundOffset
     self.thickness = 2
     self.canvas = canvas
 
@@ -44,6 +46,16 @@ function Pencil:init(x, y, canvas)
     self.shadow:setCenter(0, 1)
     self.shadow:moveTo(self.x, self.y)
     self.shadow:add()
+end
+
+function Pencil:StartDrawing()
+    self.drawing = true
+    self.raisePencilAnimator = gfx.animator.new(300, self.groundOffset, 0)
+end
+
+function Pencil:StopDrawing()
+    self.drawing = false
+    self.raisePencilAnimator = gfx.animator.new(300, self.groundOffset, maxGroundOffset)
 end
 
 function Pencil:update()
@@ -56,20 +68,9 @@ function Pencil:update()
     local previousX = self.x
     local previousY = self.y
 
-    -- start a new pencil animator if needed
-    if not self.drawing and self.raisePencilAnimator == nil and self.groundOffset < 10 then
-        self.raisePencilAnimator = gfx.animator.new(300, self.groundOffset, 10)
-    elseif self.drawing and self.raisePencilAnimator == nil and self.groundOffset > 0 then
-        self.raisePencilAnimator = gfx.animator.new(300, self.groundOffset, 0)
-    end
-
     -- update ground offset with animator
     if self.raisePencilAnimator ~= nil then
         self.groundOffset = self.raisePencilAnimator:currentValue();
-
-        if self.raisePencilAnimator:ended() then
-            self.raisePencilAnimator = nil
-        end
     end
 
     local shadowXOffset = self.groundOffset
@@ -84,7 +85,7 @@ function Pencil:update()
         self:moveTowardsGoal()
     end
 
-    if self.drawing then
+    if self.groundOffset == 0 then
         gfx.lockFocus(self.canvas)
         gfx.setLineWidth(math.random(self.thickness, self.thickness + 1))
         gfx.setLineCapStyle(gfx.kLineCapStyleRound)
@@ -122,7 +123,7 @@ function Pencil:DrawLine(x1, y1, x2, y2)
 
     self.animator = gfx.animator.new(1000,
         initialPoint, goalPoint, pd.easingFunctions.inOutQuint)
-    self.drawing = true
+    self:StartDrawing()
     self:moveTo(x1, y1)
 
     pencilScratch:play()
@@ -131,7 +132,7 @@ end
 function Pencil:DrawPoly(poly)
     self.animator = gfx.animator.new(poly:length() * 10, poly,
         pd.easingFunctions.inOutQuint)
-    self.drawing = true
+    self:StartDrawing()
     self:moveTo(poly:getPointAt(1))
 
     pencilScratch:play()
@@ -149,7 +150,7 @@ end
 ---@param x integer
 ---@param y integer
 function Pencil:MovePencil(x, y)
-    self.drawing = false
+    self:StopDrawing()
     local initialPoint = pd.geometry.point.new(self.x, self.y)
     local goalPoint = pd.geometry.point.new(x, y)
 
@@ -168,7 +169,7 @@ end
 ---@param centre _Point
 ---@param radius integer
 function Pencil:DrawCircle(centre, radius)
-    self.drawing = true
+    self:StartDrawing()
     self:moveTo(centre.x, centre.y - radius)
 
     local path = pd.geometry.arc.new(centre.x, centre.y, radius, 0, 360)
