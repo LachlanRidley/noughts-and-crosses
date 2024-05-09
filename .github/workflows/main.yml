@@ -8,7 +8,7 @@ on:
 
 env:
   BUILD_OUTPUT: noughts-and-crosses
-  ITCH_USERNAME: lachlan_ridley
+  ITCH_USERNAME: lachlan-ridley
   ITCH_GAME_ID: noughts-and-crosses
 jobs:
   build:
@@ -40,7 +40,7 @@ jobs:
           draft: false
           prerelease: false
 
-      - name: Upload Release Asset
+      - name: Upload Release Asset to Github
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -52,7 +52,7 @@ jobs:
       - name: Upload Release Asset to Itch
         uses: KikimoraGames/itch-publish@v0.0.3
         with:
-          butlerApiKey: ${{secrets.BUTLER_API_KEY}}
+          butlerApiKey: ${{ secrets.BUTLER_API_KEY }}
           itchUsername: ${{ env.ITCH_USERNAME }}
           itchGameId: ${{ env.ITCH_GAME_ID }}
           buildChannel: main
