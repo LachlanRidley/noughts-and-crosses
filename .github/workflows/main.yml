@@ -4,11 +4,12 @@ on:
   push:
     # Runs whenever a git tag in SemVer pattern is pushed
     tags:
-      - 'v*'
+      - "v*"
 
 env:
   BUILD_OUTPUT: noughts-and-crosses
-
+  ITCH_USERNAME: lachlan_ridley
+  ITCH_GAME_ID: noughts-and-crosses
 jobs:
   build:
     name: Upload Release Asset
@@ -48,3 +49,10 @@ jobs:
           asset_path: ./${{ env.BUILD_OUTPUT }}-${{ github.ref_name }}.zip
           asset_name: ${{ env.BUILD_OUTPUT }}-${{ github.ref_name }}.zip
           asset_content_type: application/zip
+      - name: Upload Release Asset to Itch
+        uses: KikimoraGames/itch-publish@v0.0.3
+        with:
+          butlerApiKey: ${{secrets.BUTLER_API_KEY}}
+          itchUsername: ${{ env.ITCH_USERNAME }}
+          itchGameId: ${{ env.ITCH_GAME_ID }}
+          buildChannel: main
