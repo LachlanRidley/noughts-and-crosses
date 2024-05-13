@@ -528,7 +528,7 @@ function DrawNought(x, y)
 		coroutine.yield()
 
 		someonesTurn = true
-		pencil.drawing = false
+		pencil:stopDrawing()
 	end
 end
 
@@ -552,7 +552,7 @@ function DrawCross(x, y)
 		coroutine.yield()
 
 		someonesTurn = true
-		pencil.drawing = false
+		pencil:stopDrawing()
 	end
 end
 
@@ -834,6 +834,10 @@ function pd.update()
 		else
 			previousEraserY = nil
 		end
+	end
+
+	if not pencil:IsDone() and pd.buttonJustPressed(pd.kButtonA) then
+		pencil:skip()
 	end
 
 	gfx.sprite.redrawBackground()

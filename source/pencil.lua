@@ -1,3 +1,5 @@
+import "CoreLibs/math"
+
 local pd <const> = playdate
 local gfx <const> = pd.graphics
 local snd <const> = pd.sound
@@ -9,9 +11,10 @@ local pencilScratch = snd.sampleplayer.new("scratch")
 ---@class Pencil: _Sprite
 ---@field x integer
 ---@field y integer
----@field drawing boolean
+---@field private drawing boolean
 ---@field thickness integer
----@field private animator _Animator
+---@field private lineToDraw _LineSegment | nil
+---@field private animator _Animator | nil
 ---@field private raisePencilAnimator _Animator | nil
 ---@field private groundOffset number
 ---@field private action thread
@@ -62,7 +65,7 @@ function Pencil:update()
     if self.raisePencilAnimator ~= nil and self.raisePencilAnimator:ended() then
         self.raisePencilAnimator = nil
         self.animator:reset() -- TODO this is a bit of a hack, it lets us start both animators at the same time but lets the raisePencilAnimator do its thing first
-    elseif self.animator:ended() then
+    elseif self.animator == nil or self.animator:ended() then
         if coroutine.status(self.action) ~= "dead" then
             coroutine.resume(self.action)
         end
@@ -79,7 +82,7 @@ function Pencil:update()
     local shadowXOffset = self.groundOffset
     local pencilYOffset = -self.groundOffset
 
-    if self.raisePencilAnimator == nil and not self.animator:ended() then
+    if self.raisePencilAnimator == nil and self.animator ~= nil and not self.animator:ended() then
         local nextPoint = self.animator:currentValue();
         self:moveTo(nextPoint.x, nextPoint.y + pencilYOffset)
     end
@@ -97,6 +100,33 @@ function Pencil:update()
     end
 
     self.shadow:moveTo(self.x + shadowXOffset, self.y - pencilYOffset) -- TODO it's gross we have to subtract pencil offset here. We should save canonical coordinates which we offset both sprites from
+end
+
+function Pencil:skip()
+    if self:IsDone() then return end
+    if self.lineToDraw == nil then return end
+
+    local distanceLeft = pd.geometry.distanceToPoint(self.x, self.y, self.lineToDraw.x2, self.lineToDraw.y2);
+
+    local segments = distanceLeft / 3;
+
+    gfx.lockFocus(self.canvas)
+    for i = 0, segments, 1 do
+        local previousX = self.x
+        local previousY = self.y
+
+        self.x = pd.math.lerp(self.x, self.lineToDraw.x2, 1 / segments * i)
+        self.y = pd.math.lerp(self.y, self.lineToDraw.y2, 1 / segments * i)
+
+        if self.groundOffset == 0 then
+            gfx.setLineWidth(math.random(self.thickness, self.thickness + 1))
+            gfx.setLineCapStyle(gfx.kLineCapStyleRound)
+            gfx.drawLine(previousX, previousY, self.x, self.y)
+        end
+    end
+    gfx.unlockFocus()
+
+    self.animator = nil
 end
 
 function Pencil:moveTowardsGoal()
@@ -121,9 +151,9 @@ function Pencil:moveTowardsGoal()
 end
 
 function Pencil:drawLine(x1, y1, x2, y2)
-    local line = playdate.geometry.lineSegment.new(x1, y1, x2, y2)
+    self.lineToDraw = playdate.geometry.lineSegment.new(x1, y1, x2, y2)
 
-    self.animator = gfx.animator.new(1000, line, pd.easingFunctions.inOutQuint)
+    self.animator = gfx.animator.new(1000, self.lineToDraw, pd.easingFunctions.inOutQuint)
     self:startDrawing()
     self:moveTo(x1, y1)
 
@@ -140,7 +170,7 @@ function Pencil:drawPoly(poly)
 end
 
 function Pencil:IsDone()
-    return self.animator:ended()
+    return self.animator == nil or self.animator:ended()
 end
 
 function Pencil:HasNoQueuedActions()
