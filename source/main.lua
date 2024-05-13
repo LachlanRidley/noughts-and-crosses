@@ -16,219 +16,222 @@ local gfx <const> = pd.graphics
 local snd <const> = pd.sound
 local timer <const> = pd.timer
 
-local n <const> = {
-	40, 97,
-	48, 25,
-	72, 81,
-	85, 28
-}
+local splashLetters <const> = {
+	-- N
+	{
+		40, 97,
+		48, 25,
+		72, 81,
+		85, 28
+	},
+	-- O
+	{
+		102, 72,
+		102, 66,
+		106, 60,
+		115, 58,
+		123, 60,
+		128, 63,
+		130, 67,
+		130, 71,
+		129, 77,
+		126, 81,
+		121, 84,
+		113, 85,
+		109, 85,
+		106, 83,
+		103, 79,
+		102, 72
+	},
+	-- U
+	{
+		152, 62,
+		152, 85,
+		153, 88,
+		156, 90,
+		160, 91,
+		164, 91,
+		168, 91,
+		171, 90,
+		172, 87,
+		174, 84,
+		177, 81,
+		179, 79,
+		180, 76,
+		181, 73,
+		182, 68,
+		180, 84,
+		179, 90,
+		181, 93,
+		183, 94,
+	},
+	--G
+	{
+		224, 68,
+		214, 68,
+		208, 76,
+		208, 87,
+		218, 93,
+		223, 93,
+		228, 88,
+		230, 72,
+		232, 93,
+		232, 125,
+		229, 131,
+		227, 133,
+		224, 133,
+		220, 129,
+		218, 124,
+		218, 117
+	},
+	--H
+	{
+		247, 32,
+		240, 76,
+		240, 90,
+		241, 83,
+		247, 76,
+		250, 74,
+		253, 76,
+		259, 89
+	},
+	--T part 1
+	{
+		289, 33,
+		282, 59,
+		282, 83,
+		279, 93
+	},
+	--T part 2
+	{
+		270, 64,
+		274, 61,
+		288, 61
+	},
+	-- S
+	{
+		323, 62,
+		318, 63,
+		312, 68,
+		312, 75,
+		316, 79,
+		321, 81,
+		325, 83,
+		324, 87,
+		317, 87,
+		313, 90,
+		303, 90
+	},
+	-- PLUS 1
+	{
+		175, 113,
+		176, 122,
+		177, 125,
+		178, 142
 
-local o1 <const> = {
-	102, 72,
-	102, 66,
-	106, 60,
-	115, 58,
-	123, 60,
-	128, 63,
-	130, 67,
-	130, 71,
-	129, 77,
-	126, 81,
-	121, 84,
-	113, 85,
-	109, 85,
-	106, 83,
-	103, 79,
-	102, 72
-}
+	},
+	-- PLUS 2
+	{
+		168, 136,
+		170, 134,
+		184, 130,
+		191, 127,
+		197, 125
+	},
+	-- C
+	{
+		71, 149,
+		63, 154,
+		53, 166,
+		48, 175,
+		48, 189,
+		52, 193,
+		52, 195,
+		59, 200,
+		66, 202,
+		79, 203
+	},
+	-- R
+	{
+		106, 172,
+		106, 201,
+		106, 180,
+		111, 174,
+		119, 172,
+		124, 176
 
-local u <const> = {
-	152, 62,
-	152, 85,
-	153, 88,
-	156, 90,
-	160, 91,
-	164, 91,
-	168, 91,
-	171, 90,
-	172, 87,
-	174, 84,
-	177, 81,
-	179, 79,
-	180, 76,
-	181, 73,
-	182, 68,
-	180, 84,
-	179, 90,
-	181, 93,
-	183, 94,
-}
+	},
+	-- O
+	{
+		141, 193,
+		143, 185,
+		148, 174,
+		154, 174,
+		158, 171,
+		164, 175,
+		165, 188,
+		161, 197,
+		157, 199,
+		154, 199,
+		148, 195,
+		148, 190
+	},
+	-- S
+	{
+		205, 172,
+		203, 170,
+		193, 170,
+		188, 177,
+		188, 181,
+		203, 190,
+		205, 193,
+		205, 199,
+		200, 201,
+		195, 201,
+		193, 204,
+		188, 203,
+		185, 194
 
-local g <const> = {
-	224, 68,
-	214, 68,
-	208, 76,
-	208, 87,
-	218, 93,
-	223, 93,
-	228, 88,
-	230, 72,
-	232, 93,
-	232, 125,
-	229, 131,
-	227, 133,
-	224, 133,
-	220, 129,
-	218, 124,
-	218, 117
-}
-
-local h <const> = {
-	247, 32,
-	240, 76,
-	240, 90,
-	241, 83,
-	247, 76,
-	250, 74,
-	253, 76,
-	259, 89
-}
-
-local t <const> = {
-	289, 33,
-	282, 59,
-	282, 83,
-	279, 93
-}
-
-local t2 <const> = {
-	270, 64,
-	274, 61,
-	288, 61
-}
-
-local s0 <const> = {
-	323, 62,
-	318, 63,
-	312, 68,
-	312, 75,
-	316, 79,
-	321, 81,
-	325, 83,
-	324, 87,
-	317, 87,
-	313, 90,
-	303, 90
-}
-
-local plus <const> = {
-	175, 113,
-	176, 122,
-	177, 125,
-	178, 142
-
-}
-
-local plus2 <const> = {
-	168, 136,
-	170, 134,
-	184, 130,
-	191, 127,
-	197, 125
-}
-
-local c <const> = {
-	71, 149,
-	63, 154,
-	53, 166,
-	48, 175,
-	48, 189,
-	52, 193,
-	52, 195,
-	59, 200,
-	66, 202,
-	79, 203
-}
-
-local r <const> = {
-	106, 172,
-	106, 201,
-	106, 180,
-	111, 174,
-	119, 172,
-	124, 176
-
-}
-
-local o2 <const> = {
-	141, 193,
-	143, 185,
-	148, 174,
-	154, 174,
-	158, 171,
-	164, 175,
-	165, 188,
-	161, 197,
-	157, 199,
-	154, 199,
-	148, 195,
-	148, 190
-}
-
-local s1 <const> = {
-	205, 172,
-	203, 170,
-	193, 170,
-	188, 177,
-	188, 181,
-	203, 190,
-	205, 193,
-	205, 199,
-	200, 201,
-	195, 201,
-	193, 204,
-	188, 203,
-	185, 194
-
-}
-
-local s2 <const> = {
-	234, 173,
-	228, 173,
-	224, 180,
-	224, 184,
-	238, 191,
-	240, 193,
-	239, 198,
-	237, 200,
-	232, 201,
-	229, 201,
-	225, 200
-}
-
-local e <const> = {
-	266, 188,
-	271, 187,
-	271, 178,
-	267, 174,
-	258, 174,
-	255, 181,
-	256, 187,
-	262, 191,
-	268, 197,
-	282, 197
-}
-
-local s3 <const> = {
-	306, 173,
-	299, 175,
-	296, 177,
-	296, 185,
-	303, 192,
-	305, 198,
-	302, 202,
-	290, 202,
-	286, 199
+	},
+	-- S
+	{
+		234, 173,
+		228, 173,
+		224, 180,
+		224, 184,
+		238, 191,
+		240, 193,
+		239, 198,
+		237, 200,
+		232, 201,
+		229, 201,
+		225, 200
+	},
+	-- E
+	{
+		266, 188,
+		271, 187,
+		271, 178,
+		267, 174,
+		258, 174,
+		255, 181,
+		256, 187,
+		262, 191,
+		268, 197,
+		282, 197
+	},
+	-- S
+	{
+		306, 173,
+		299, 175,
+		296, 177,
+		296, 185,
+		303, 192,
+		305, 198,
+		302, 202,
+		290, 202,
+		286, 199
+	}
 }
 
 ---@enum GameState
@@ -489,25 +492,49 @@ end
 function DrawBoard()
 	someonesTurn = false
 
-	pencil:drawLine(160, 21, 156, 187)
+	pencil:startDrawing()
+	coroutine.yield()
+
+	pencil:moveAlongLine(160, 21, 156, 187)
+	coroutine.yield()
+
+	pencil:stopDrawing()
 	coroutine.yield()
 
 	pencil:movePencil(231, 19)
 	coroutine.yield()
 
-	pencil:drawLine(231, 19, 225, 190)
+	pencil:startDrawing()
+	coroutine.yield()
+
+	pencil:moveAlongLine(231, 19, 225, 190)
+	coroutine.yield()
+
+	pencil:stopDrawing()
 	coroutine.yield()
 
 	pencil:movePencil(96, 74)
 	coroutine.yield()
 
-	pencil:drawLine(96, 74, 291, 76)
+	pencil:startDrawing()
+	coroutine.yield()
+
+	pencil:moveAlongLine(96, 74, 291, 76)
+	coroutine.yield()
+
+	pencil:stopDrawing()
 	coroutine.yield()
 
 	pencil:movePencil(95, 135)
 	coroutine.yield()
 
-	pencil:drawLine(95, 135, 293, 138)
+	pencil:startDrawing()
+	coroutine.yield()
+
+	pencil:moveAlongLine(95, 135, 293, 138)
+	coroutine.yield()
+
+	pencil:stopDrawing()
 	coroutine.yield()
 
 	someonesTurn = true
@@ -524,11 +551,15 @@ function DrawNought(x, y)
 
 		local centre = ConvertBoardCoordinateToScreenSpace({ x = x, y = y })
 
-		pencil:drawCircle(centre, NOUGHT_RADIUS)
+		pencil:startDrawing()
+		coroutine.yield()
+
+		pencil:moveInCircle(centre, NOUGHT_RADIUS)
+		coroutine.yield()
+		pencil:stopDrawing()
 		coroutine.yield()
 
 		someonesTurn = true
-		pencil:stopDrawing()
 	end
 end
 
@@ -543,16 +574,21 @@ function DrawCross(x, y)
 
 		local centre = ConvertBoardCoordinateToScreenSpace({ x = x, y = y })
 
-		pencil:drawLine(centre.x - 17, centre.y - 24, centre.x + 15,
+		pencil:startDrawing()
+		coroutine:yield()
+
+		pencil:moveAlongLine(centre.x - 17, centre.y - 24, centre.x + 15,
 			centre.y + 21)
 		coroutine.yield()
 
-		pencil:drawLine(centre.x - 22, centre.y + 22, centre.x + 18,
+		pencil:moveAlongLine(centre.x - 22, centre.y + 22, centre.x + 18,
 			centre.y - 18)
 		coroutine.yield()
 
-		someonesTurn = true
 		pencil:stopDrawing()
+		coroutine.yield()
+
+		someonesTurn = true
 	end
 end
 
@@ -562,21 +598,21 @@ function DrawWinningLine(straight)
 	pencil.thickness = 8
 
 	if straight == Straight.TopRow then
-		pencil:drawLine(89, 46, 301, 48)
+		pencil:moveAlongLine(89, 46, 301, 48)
 	elseif straight == Straight.MiddleRow then
-		pencil:drawLine(87, 104, 306, 105)
+		pencil:moveAlongLine(87, 104, 306, 105)
 	elseif straight == Straight.BottomRow then
-		pencil:drawLine(85, 164, 298, 168)
+		pencil:moveAlongLine(85, 164, 298, 168)
 	elseif straight == Straight.LeftColumn then
-		pencil:drawLine(121, 15, 122, 191)
+		pencil:moveAlongLine(121, 15, 122, 191)
 	elseif straight == Straight.MiddleColumn then
-		pencil:drawLine(196, 16, 191, 193)
+		pencil:moveAlongLine(196, 16, 191, 193)
 	elseif straight == Straight.RightColumn then
-		pencil:drawLine(265, 15, 260, 193)
+		pencil:moveAlongLine(265, 15, 260, 193)
 	elseif straight == Straight.TopLeftToBottomRight then
-		pencil:drawLine(103, 22, 285, 192)
+		pencil:moveAlongLine(103, 22, 285, 192)
 	elseif straight == Straight.BottomLeftToTopRight then
-		pencil:drawLine(94, 187, 289, 23)
+		pencil:moveAlongLine(94, 187, 289, 23)
 	end
 
 	coroutine.yield()
@@ -585,82 +621,19 @@ end
 function DrawSplashText()
 	pencil.thickness = 4
 
-	pencil:drawPoly(pd.geometry.polygon.new(table.unpack(n)));
-	coroutine.yield()
+	for index in ipairs(splashLetters) do
+		pencil:startDrawing()
+		coroutine:yield()
 
-	pencil:movePencil(o1[1], o1[2])
-	coroutine.yield()
+		pencil:moveAlongPoly(pd.geometry.polygon.new(table.unpack(splashLetters[index])))
+		coroutine:yield()
 
-	pencil:drawPoly(pd.geometry.polygon.new(table.unpack(o1)));
-	coroutine.yield()
+		pencil:stopDrawing()
+		coroutine:yield()
 
-	pencil:movePencil(u[1], u[2])
-	coroutine.yield()
-
-	pencil:drawPoly(pd.geometry.polygon.new(table.unpack(u)));
-	coroutine.yield()
-
-	pencil:movePencil(g[1], g[2])
-	coroutine.yield()
-
-	pencil:drawPoly(pd.geometry.polygon.new(table.unpack(g)));
-	coroutine.yield()
-	pencil:movePencil(h[1], h[2])
-	coroutine.yield()
-	pencil:drawPoly(pd.geometry.polygon.new(table.unpack(h)));
-	coroutine.yield()
-	pencil:movePencil(t[1], t[2])
-	coroutine.yield()
-	pencil:drawPoly(pd.geometry.polygon.new(table.unpack(t)));
-	coroutine.yield()
-	pencil:movePencil(t2[1], t2[2])
-	coroutine.yield()
-	pencil:drawPoly(pd.geometry.polygon.new(table.unpack(t2)));
-	coroutine.yield()
-	pencil:movePencil(s0[1], s0[2])
-	coroutine.yield()
-	pencil:drawPoly(pd.geometry.polygon.new(table.unpack(s0)));
-	coroutine.yield()
-	pencil:movePencil(plus[1], plus[2])
-	coroutine.yield()
-
-	pencil:drawPoly(pd.geometry.polygon.new(table.unpack(plus)));
-	coroutine.yield()
-	pencil:movePencil(plus2[1], plus2[2])
-	coroutine.yield()
-	pencil:drawPoly(pd.geometry.polygon.new(table.unpack(plus2)));
-	coroutine.yield()
-
-	pencil:movePencil(c[1], c[2])
-	coroutine.yield()
-	pencil:drawPoly(pd.geometry.polygon.new(table.unpack(c)));
-	coroutine.yield()
-	pencil:movePencil(r[1], r[2])
-	coroutine.yield()
-	pencil:drawPoly(pd.geometry.polygon.new(table.unpack(r)));
-	coroutine.yield()
-	pencil:movePencil(o2[1], o2[2])
-	coroutine.yield()
-	pencil:drawPoly(pd.geometry.polygon.new(table.unpack(o2)));
-	coroutine.yield()
-	pencil:movePencil(s1[1], s1[2])
-	coroutine.yield()
-	pencil:drawPoly(pd.geometry.polygon.new(table.unpack(s1)));
-	coroutine.yield()
-	pencil:movePencil(s2[1], s2[2])
-	coroutine.yield()
-	pencil:drawPoly(pd.geometry.polygon.new(table.unpack(s2)));
-	coroutine.yield()
-	pencil:movePencil(e[1], e[2])
-	coroutine.yield()
-	pencil:drawPoly(pd.geometry.polygon.new(table.unpack(e)));
-	coroutine.yield()
-	pencil:movePencil(s3[1], s3[2])
-	coroutine.yield()
-	pencil:drawPoly(pd.geometry.polygon.new(table.unpack(s3)));
-	coroutine.yield()
-	pencil:movePencil(10, 10)
-	coroutine.yield()
+		pencil:movePencil(splashLetters[index + 1][1], splashLetters[index + 1][2])
+		coroutine:yield()
+	end
 end
 
 function EraseCanvas()

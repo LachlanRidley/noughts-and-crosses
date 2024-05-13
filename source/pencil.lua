@@ -51,21 +51,16 @@ function Pencil:init(x, y, canvas)
     self.shadow:add()
 end
 
-function Pencil:startDrawing()
-    self.drawing = true
-    self.raisePencilAnimator = gfx.animator.new(300, self.groundOffset, 0)
-end
-
-function Pencil:stopDrawing()
-    self.drawing = false
-    self.raisePencilAnimator = gfx.animator.new(300, self.groundOffset, maxGroundOffset)
-end
-
 function Pencil:update()
-    if self.raisePencilAnimator ~= nil and self.raisePencilAnimator:ended() then
-        self.raisePencilAnimator = nil
-        self.animator:reset() -- TODO this is a bit of a hack, it lets us start both animators at the same time but lets the raisePencilAnimator do its thing first
-    elseif self.animator == nil or self.animator:ended() then
+    if self.raisePencilAnimator ~= nil then
+        if self.raisePencilAnimator:ended() then
+            self.raisePencilAnimator = nil
+        else
+            self.groundOffset = self.raisePencilAnimator:currentValue();
+        end
+    end
+
+    if self.animator == nil or self.animator:ended() then
         if coroutine.status(self.action) ~= "dead" then
             coroutine.resume(self.action)
         end
@@ -75,14 +70,10 @@ function Pencil:update()
     local previousY = self.y
 
     -- update ground offset with animator
-    if self.raisePencilAnimator ~= nil then
-        self.groundOffset = self.raisePencilAnimator:currentValue();
-    end
-
     local shadowXOffset = self.groundOffset
     local pencilYOffset = -self.groundOffset
 
-    if self.raisePencilAnimator == nil and self.animator ~= nil and not self.animator:ended() then
+    if self.animator ~= nil and not self.animator:ended() then
         local nextPoint = self.animator:currentValue();
         self:moveTo(nextPoint.x, nextPoint.y + pencilYOffset)
     end
@@ -150,20 +141,28 @@ function Pencil:moveTowardsGoal()
     end
 end
 
-function Pencil:drawLine(x1, y1, x2, y2)
+function Pencil:startDrawing()
+    self.drawing = true
+    self.raisePencilAnimator = gfx.animator.new(300, self.groundOffset, 0)
+end
+
+function Pencil:stopDrawing()
+    self.drawing = false
+    self.raisePencilAnimator = gfx.animator.new(300, self.groundOffset, maxGroundOffset)
+end
+
+function Pencil:moveAlongLine(x1, y1, x2, y2)
     self.lineToDraw = playdate.geometry.lineSegment.new(x1, y1, x2, y2)
 
     self.animator = gfx.animator.new(1000, self.lineToDraw, pd.easingFunctions.inOutQuint)
-    self:startDrawing()
     self:moveTo(x1, y1)
 
     pencilScratch:play()
 end
 
-function Pencil:drawPoly(poly)
+function Pencil:moveAlongPoly(poly)
     self.animator = gfx.animator.new(poly:length() * 10, poly,
         pd.easingFunctions.inOutQuint)
-    self:startDrawing()
     self:moveTo(poly:getPointAt(1))
 
     pencilScratch:play()
@@ -181,7 +180,6 @@ end
 ---@param x integer
 ---@param y integer
 function Pencil:movePencil(x, y)
-    self:stopDrawing()
     local initialPoint = pd.geometry.point.new(self.x, self.y)
     local goalPoint = pd.geometry.point.new(x, y)
 
@@ -199,8 +197,7 @@ end
 ---Queues a circle draw
 ---@param centre _Point
 ---@param radius integer
-function Pencil:drawCircle(centre, radius)
-    self:startDrawing()
+function Pencil:moveInCircle(centre, radius)
     self:moveTo(centre.x, centre.y - radius)
 
     local path = pd.geometry.arc.new(centre.x, centre.y, radius, 0, 360)
