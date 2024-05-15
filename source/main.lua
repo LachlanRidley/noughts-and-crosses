@@ -492,6 +492,9 @@ end
 function DrawBoard()
 	someonesTurn = false
 
+	pencil:movePencil(160, 21)
+	coroutine.yield()
+
 	pencil:startDrawing()
 	coroutine.yield()
 
@@ -556,6 +559,7 @@ function DrawNought(x, y)
 
 		pencil:moveInCircle(centre, NOUGHT_RADIUS)
 		coroutine.yield()
+
 		pencil:stopDrawing()
 		coroutine.yield()
 
@@ -620,6 +624,9 @@ end
 
 function DrawSplashText()
 	pencil.thickness = 4
+
+	pencil:movePencil(splashLetters[1][1], splashLetters[1][2])
+	coroutine:yield()
 
 	for index in ipairs(splashLetters) do
 		pencil:startDrawing()
@@ -704,7 +711,7 @@ function NewGame(startState)
 	cursor:add()
 
 	-- draw a board
-	pencil:queue(DrawBoard)
+	pencil:queue(drawBoard)
 
 	-- if startState ~= nil then
 	-- 	for i = 1, #startState do
@@ -734,7 +741,7 @@ function pd.update()
 			NewGame()
 		end
 	elseif state == GameState.Playing then
-		if pencil:IsDone() and someonesTurn then
+		if pencil:isDone() and someonesTurn then
 			CheckForWinner()
 		end
 
@@ -809,7 +816,7 @@ function pd.update()
 		end
 	end
 
-	if not pencil:IsDone() and pd.buttonJustPressed(pd.kButtonA) then
+	if not pencil:isDone() and pd.buttonJustPressed(pd.kButtonA) then
 		pencil:skip()
 	end
 
@@ -817,8 +824,8 @@ function pd.update()
 	gfx.sprite.update()
 	timer.updateTimers()
 
-	gfx.drawTextAligned("X: " .. scores.x .. " - O: " .. scores.o, SCREEN_WIDTH / 2, SCREEN_HEIGHT - 30,
-		kTextAlignment.center)
+	-- gfx.drawTextAligned("X: " .. scores.x .. " - O: " .. scores.o, SCREEN_WIDTH / 2, SCREEN_HEIGHT - 30,
+	-- 	kTextAlignment.center)
 end
 
 --- Plays a symbol in the provided space. Currently assumes that you have

@@ -11,7 +11,6 @@ local pencilScratch = snd.sampleplayer.new("scratch")
 ---@class Pencil: _Sprite
 ---@field x integer
 ---@field y integer
----@field private drawing boolean
 ---@field thickness integer
 ---@field private lineToDraw _LineSegment | nil
 ---@field private animator _Animator | nil
@@ -39,7 +38,6 @@ function Pencil:init(x, y, canvas)
     self:setImage(pencilImage)
     self:moveTo(x, y)
     self:setCenter(0, 1)
-    self.drawing = false
     self.groundOffset = maxGroundOffset
     self.thickness = 2
     self.canvas = canvas
@@ -52,30 +50,26 @@ function Pencil:init(x, y, canvas)
 end
 
 function Pencil:update()
+    local previousX = self.x
+    local previousY = self.y + self.groundOffset
+
+    local nextX = previousX
+    local nextY = previousY
+
     if self.raisePencilAnimator ~= nil then
-        if self.raisePencilAnimator:ended() then
-            self.raisePencilAnimator = nil
-        else
-            self.groundOffset = self.raisePencilAnimator:currentValue();
-        end
+        self.groundOffset = self.raisePencilAnimator:currentValue();
     end
 
-    if self.animator == nil or self.animator:ended() then
+    if self:isDone() then
         if coroutine.status(self.action) ~= "dead" then
             coroutine.resume(self.action)
         end
     end
 
-    local previousX = self.x
-    local previousY = self.y
-
-    -- update ground offset with animator
-    local shadowXOffset = self.groundOffset
-    local pencilYOffset = -self.groundOffset
-
     if self.animator ~= nil and not self.animator:ended() then
         local nextPoint = self.animator:currentValue();
-        self:moveTo(nextPoint.x, nextPoint.y + pencilYOffset)
+        nextX = nextPoint.x
+        nextY = nextPoint.y
     end
 
     if self:HasNoQueuedActions() then
@@ -86,15 +80,16 @@ function Pencil:update()
         gfx.lockFocus(self.canvas)
         gfx.setLineWidth(math.random(self.thickness, self.thickness + 1))
         gfx.setLineCapStyle(gfx.kLineCapStyleRound)
-        gfx.drawLine(previousX, previousY, self.x, self.y)
+        gfx.drawLine(previousX, previousY, nextX, nextY)
         gfx.unlockFocus()
     end
 
-    self.shadow:moveTo(self.x + shadowXOffset, self.y - pencilYOffset) -- TODO it's gross we have to subtract pencil offset here. We should save canonical coordinates which we offset both sprites from
+    self:moveTo(nextX, nextY - self.groundOffset)
+    self.shadow:moveTo(nextX + self.groundOffset, nextY)
 end
 
 function Pencil:skip()
-    if self:IsDone() then return end
+    if self:isDone() then return end
     if self.lineToDraw == nil then return end
 
     local distanceLeft = pd.geometry.distanceToPoint(self.x, self.y, self.lineToDraw.x2, self.lineToDraw.y2);
@@ -142,12 +137,10 @@ function Pencil:moveTowardsGoal()
 end
 
 function Pencil:startDrawing()
-    self.drawing = true
     self.raisePencilAnimator = gfx.animator.new(300, self.groundOffset, 0)
 end
 
 function Pencil:stopDrawing()
-    self.drawing = false
     self.raisePencilAnimator = gfx.animator.new(300, self.groundOffset, maxGroundOffset)
 end
 
@@ -168,8 +161,11 @@ function Pencil:moveAlongPoly(poly)
     pencilScratch:play()
 end
 
-function Pencil:IsDone()
-    return self.animator == nil or self.animator:ended()
+function Pencil:isDone()
+    local doneMoving = self.animator == nil or self.animator:ended()
+    local doneRaising = self.raisePencilAnimator == nil or self.raisePencilAnimator:ended()
+
+    return doneMoving and doneRaising
 end
 
 function Pencil:HasNoQueuedActions()
