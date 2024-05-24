@@ -578,15 +578,25 @@ function DrawCross(x, y)
 
 		local centre = ConvertBoardCoordinateToScreenSpace({ x = x, y = y })
 
-		pencil:startDrawing()
-		coroutine:yield()
-
-		pencil:moveAlongLine(centre.x - 17, centre.y - 24, centre.x + 15,
-			centre.y + 21)
+		pencil:movePencil(centre.x - 17, centre.y - 24)
 		coroutine.yield()
 
-		pencil:moveAlongLine(centre.x - 22, centre.y + 22, centre.x + 18,
-			centre.y - 18)
+		pencil:startDrawing()
+		coroutine.yield()
+
+		pencil:moveAlongLine(centre.x - 17, centre.y - 24, centre.x + 15, centre.y + 21)
+		coroutine.yield()
+
+		pencil:stopDrawing()
+		coroutine.yield()
+
+		pencil:movePencil(centre.x - 22, centre.y + 22)
+		coroutine.yield()
+
+		pencil:startDrawing();
+		coroutine.yield();
+
+		pencil:moveAlongLine(centre.x - 22, centre.y + 22, centre.x + 18, centre.y - 18)
 		coroutine.yield()
 
 		pencil:stopDrawing()
