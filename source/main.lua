@@ -711,7 +711,7 @@ function NewGame(startState)
 	cursor:add()
 
 	-- draw a board
-	pencil:queue(drawBoard)
+	pencil:queue(DrawBoard)
 
 	-- if startState ~= nil then
 	-- 	for i = 1, #startState do
