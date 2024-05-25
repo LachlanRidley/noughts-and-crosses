@@ -1,3 +1,20 @@
+import 'luaunit/playdate_luaunit_fix'
+import 'luaunit/luaunit'
+
+import 'test'
+
+playdate.stop()
+
+-- TODO probably want to make these only run in simulator
+luaunit.PRINT_TABLE_REF_IN_ERROR_MSG = true
+local luaunit_args = { '--output', 'text', '--verbose', '-r' }
+
+local returnValue = luaunit.LuaUnit.run(table.unpack(luaunit_args))
+
+print("unit test return value = " .. returnValue);
+
+playdate.start()
+
 import "CoreLibs/object"
 import "CoreLibs/graphics"
 import "CoreLibs/sprites"
