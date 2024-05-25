@@ -1,6 +1,14 @@
 import 'luaunit/playdate_luaunit_fix'
 import 'luaunit/luaunit'
 
+import "CoreLibs/object"
+import "CoreLibs/graphics"
+import "CoreLibs/sprites"
+import "CoreLibs/timer"
+
+import "pencil"
+import "board"
+import "ai"
 import 'test'
 
 playdate.stop()
@@ -14,13 +22,6 @@ local returnValue = luaunit.LuaUnit.run(table.unpack(luaunit_args))
 print("unit test return value = " .. returnValue);
 
 playdate.start()
-
-import "CoreLibs/object"
-import "CoreLibs/graphics"
-import "CoreLibs/sprites"
-import "CoreLibs/timer"
-
-import "pencil"
 
 -- globals
 local SCREEN_WIDTH <const> = 400
@@ -339,9 +340,9 @@ end
 local playingAi = true
 
 ---@alias symbol "-" | "o" | "x"
----@type symbol
+---@type "x" | "o"
 local aiSymbol = "x"
----@type symbol
+---@type "x" | "o"
 local playerSymbol = "o"
 ---@type symbol
 local currentTurn = "x"
@@ -362,141 +363,18 @@ function ConvertBoardCoordinateToScreenSpace(coordinate)
 	return pd.geometry.point.new(screenX, screenY)
 end
 
----@type symbol[][]
+---@type Board
 local board
 
 ---@type GameState
 local state = GameState.SplashScreen;
 
--- straights are the 8 possible winning rows.
----@enum straight
-local Straight = {
-	TopRow = 1,
-	MiddleRow = 2,
-	BottomRow = 3,
-
-	LeftColumn = 4,
-	MiddleColumn = 5,
-	RightColumn = 6,
-
-	TopLeftToBottomRight = 7,
-	BottomLeftToTopRight = 8
-}
 
 ---@alias boardDimension 1 | 2 | 3
 
 ---@class boardCoordinate
 ---@field x boardDimension
 ---@field y boardDimension
-
----Returns all the straights that include a given position on the board.
----@param x boardDimension
----@param y boardDimension
----@return straight[]
-function GetStraightsForPosition(x, y)
-	local straights = {}
-	if x == 1 then
-		table.insert(straights, Straight.LeftColumn)
-	elseif x == 2 then
-		table.insert(straights, Straight.MiddleColumn)
-	elseif x == 3 then
-		table.insert(straights, Straight.RightColumn)
-	end
-
-	if y == 1 then
-		table.insert(straights, Straight.TopRow)
-	elseif y == 2 then
-		table.insert(straights, Straight.MiddleRow)
-	elseif y == 3 then
-		table.insert(straights, Straight.BottomRow)
-	end
-
-	if x == 2 and y == 2 then
-		table.insert(straights, Straight.TopLeftToBottomRight)
-		table.insert(straights, Straight.BottomLeftToTopRight)
-	elseif (x == 1 and y == 1) or (x == 3 and y == 3) then
-		table.insert(straights, Straight.TopLeftToBottomRight)
-	elseif (x == 1 and y == 3) or (x == 3 and y == 1) then
-		table.insert(straights, Straight.BottomLeftToTopRight)
-	end
-
-	return straights
-end
-
----@param straight straight
----@param symbol symbol
-function CountForStraight(straight, symbol)
-	if straight == Straight.TopRow then
-		return CountInRow(1, symbol)
-	elseif straight == Straight.MiddleRow then
-		return CountInRow(2, symbol)
-	elseif straight == Straight.BottomRow then
-		return CountInRow(3, symbol)
-	elseif straight == Straight.LeftColumn then
-		return CountInCol(1, symbol)
-	elseif straight == Straight.MiddleColumn then
-		return CountInCol(2, symbol)
-	elseif straight == Straight.RightColumn then
-		return CountInCol(3, symbol)
-	elseif straight == Straight.TopLeftToBottomRight then
-		return CountInTopLeftToBottomRight(symbol)
-	elseif straight == Straight.BottomLeftToTopRight then
-		return CountInBottomLeftToTopRight(symbol)
-	end
-
-	error("Invalid straight provided")
-end
-
----Checks if the given straight has all three of the same symbol
----@param straight straight the straight to check
----@return symbol | nil # the winning symbol or nil if the straight does not have a winner
-function GetWinnerInStraight(straight)
-	if CountForStraight(straight, "x") == 3 then
-		return "x"
-	elseif CountForStraight(straight, "o") == 3 then
-		return "o"
-	end
-
-	return nil
-end
-
-function CountInRow(row, symbol)
-	local count = 0
-	for col = 1, 3, 1 do
-		if board[col][row] == symbol then
-			count += 1
-		end
-	end
-	return count
-end
-
-function CountInCol(col, symbol)
-	local count = 0
-	for row = 1, 3, 1 do
-		if board[col][row] == symbol then
-			count += 1
-		end
-	end
-	return count
-end
-
-function CountInTopLeftToBottomRight(symbol)
-	local count = 0
-	if board[1][1] == symbol then count += 1 end
-	if board[2][2] == symbol then count += 1 end
-	if board[3][3] == symbol then count += 1 end
-
-	return count
-end
-
-function CountInBottomLeftToTopRight(symbol)
-	local count = 0
-	if board[1][3] == symbol then count += 1 end
-	if board[2][2] == symbol then count += 1 end
-	if board[3][1] == symbol then count += 1 end
-
-	return count
-end
 
 function FlipTurn()
 	if currentTurn == "x" then
@@ -716,11 +594,7 @@ function NewGame(startState)
 	state = GameState.Playing
 
 	-- setup game
-	board = {
-		{ "-", "-", "-" },
-		{ "-", "-", "-" },
-		{ "-", "-", "-" }
-	}
+	board = Board()
 	currentTurn = "x"
 
 	-- setup pencil
@@ -752,7 +626,7 @@ end
 
 function CheckForWinner()
 	for _, straight in pairs(Straight) do
-		local winningSymbol = GetWinnerInStraight(straight)
+		local winningSymbol = board:getWinnerInStraight(straight)
 
 		if winningSymbol ~= nil then
 			DrawWinningLine(straight)
@@ -774,7 +648,7 @@ function pd.update()
 
 		if someonesTurn then
 			if playingAi and currentTurn == aiSymbol then
-				local aiMove = ChooseAiMove()
+				local aiMove = ChooseAiMove(board, aiSymbol)
 				PlayOnSpace(aiMove.x, aiMove.y, aiSymbol)
 				FlipTurn()
 			end
@@ -795,7 +669,7 @@ function pd.update()
 			pencil:SetGoal(cursor.x, cursor.y)
 
 			if pd.buttonJustPressed(pd.kButtonA)
-				and SpaceIsFree(cursor.boardX, cursor.boardY) then
+				and board:spaceIsFree(cursor.boardX, cursor.boardY) then
 				PlayOnSpace(cursor.boardX, cursor.boardY, playerSymbol)
 				FlipTurn()
 			end
@@ -859,18 +733,14 @@ end
 --- already checked that the space is free.
 ---@param x 1 | 2 | 3
 ---@param y 1 | 2 | 3
----@param symbol symbol
+---@param symbol "x" | "o"
 function PlayOnSpace(x, y, symbol)
-	board[x][y] = symbol
+	board:setSpace(x, y, symbol)
 	if symbol == "x" then
 		pencil:queue(DrawCross(x, y))
 	else
 		pencil:queue(DrawNought(x, y))
 	end
-end
-
-function SpaceIsFree(x, y)
-	return board[x][y] == "-"
 end
 
 ---Checks whether a given x and y coordinate lies on the board
@@ -879,115 +749,6 @@ end
 ---@return boolean
 function IsOutOfBound(x, y)
 	return x < 1 or x > 3 or y < 1 or y > 3
-end
-
----Based on the current state of the board, chooses a move for the AI
----@return boardCoordinate
-function ChooseAiMove()
-	-- SOURCE: https://en.wikipedia.org/wiki/Tic-tac-toe#Strategy
-	---@type boardCoordinate[]
-	local availableMoves = {}
-
-	for x = 1, 3, 1 do
-		for y = 1, 3, 1 do
-			if SpaceIsFree(x, y) then
-				table.insert(availableMoves, { x = x, y = y })
-			end
-		end
-	end
-
-	for _, move in pairs(availableMoves) do
-		local straights = GetStraightsForPosition(move.x, move.y)
-
-		for _, straight in ipairs(straights) do
-			if CountForStraight(straight, aiSymbol) == 2 then
-				-- this move is on a straight which already has two "o"
-				-- so playing here is a win
-				print("I can win so I will")
-				return move
-			end
-		end
-	end
-
-	for _, move in pairs(availableMoves) do
-		local straights = GetStraightsForPosition(move.x, move.y)
-
-		for _, straight in ipairs(straights) do
-			if CountForStraight(straight, playerSymbol) == 2 then
-				-- I have to block the opponent here or I will lose
-				print("I have to block")
-				return move
-			end
-		end
-	end
-
-	for _, move in ipairs(availableMoves) do
-		-- forking means playing any move which will convert 2 unblocked
-		-- straights into a winnable straight that's actually not complicated.
-		-- Any move with 2 or more unblocked straights is a fork
-		-- get all my unblocked straights (straights with 1 "o" and 0 "x")
-		-- if there are 2 or more then play here to create a fork
-		local straights = GetStraightsForPosition(move.x, move.y)
-
-		local unblockedStraights = {}
-		for _, straight in ipairs(straights) do
-			if CountForStraight(straight, aiSymbol) == 1
-				and CountForStraight(straight, playerSymbol) == 0 then
-				table.insert(unblockedStraights, straight)
-			end
-		end
-
-		if #unblockedStraights >= 2 then
-			print("I can make a fork which means I'll win next turn")
-			return move
-		end
-	end
-
-	-- TODO block opponents fork
-	-- so this is the most complicated one.
-	-- the logic is also slightly different here. Normally we can just look
-	-- for a good move until we find one and take it but here we have to
-	-- anticipate the player's move and determine which is the most valuable
-	-- one to block.
-	-- we have to identify any moves that on the player's turn will create a
-	-- fork
-	-- if there's only one fork, then we block it, easy
-	-- if there's a move that can block all forks, then we should take it as
-	-- long as it will produce a winnable straight (which the player will then
-	-- be forced to block)
-	-- if no such move exists, then we have to stall. Pick any move which will
-	-- produce a winning straight but not force the player to make a fork when
-	-- they defend against it
-
-	for _, move in pairs(availableMoves) do
-		if move.x == 2 and move.y == 2 then
-			print("hmm, I guess I'll take the centre")
-			return move
-		end
-	end
-
-	-- TODO opposite corner
-
-	for _, move in pairs(availableMoves) do
-		if ((move.x == 1 or move.x == 3) and move.y ~= 2)
-			or ((move.y == 1 or move.y == 3) and move.x ~= 2) then
-			print("I'll take an empty corner plz")
-			return move
-		end
-	end
-
-	for _, move in pairs(availableMoves) do
-		if move.x == 2 or move.y == 2 then
-			print("empty sides are the way to go")
-			return move
-		end
-	end
-
-	print(
-		"damn, I don't know what to do. I'll choose a move at random")
-	local chosenMove = availableMoves[math.random(1, #availableMoves)]
-
-	return chosenMove
 end
 
 Setup()
