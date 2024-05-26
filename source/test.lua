@@ -43,6 +43,17 @@ function TestTakesMiddleRowWinIfAvailable()
     luaunit.assertEquals(aiMove, { x = 2, y = 2 })
 end
 
+function TestTakesBottomRowWinIfAvailable()
+    local board = SetupBoard({
+        { "-", "-", "-" },
+        { "-", "-", "-" },
+        { "x", "-", "x" }
+    })
+    local aiMove = ChooseAiMove(board, "x")
+
+    luaunit.assertEquals(aiMove, { x = 2, y = 3 })
+end
+
 ---comment
 ---@param state ("x" | "o" | "-" )[][] | nil
 ---@return Board
