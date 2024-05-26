@@ -10,17 +10,7 @@ function ChooseAiMove(board, symbol)
     local playerSymbol = symbol == 'x' and 'o' or 'x'
     local aiSymbol = symbol == 'x' and 'x' or 'o'
 
-    ---@type boardCoordinate[]
-    local availableMoves = {}
-
-    -- find available moves (TODO could maybe move this into Board)
-    for x = 1, 3, 1 do
-        for y = 1, 3, 1 do
-            if board:spaceIsFree(x, y) then
-                table.insert(availableMoves, { x = x, y = y })
-            end
-        end
-    end
+    local availableMoves = board:getFreeSpaces()
 
     for _, move in pairs(availableMoves) do
         local straights = board.getStraightsForPosition(move.x, move.y)

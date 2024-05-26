@@ -151,3 +151,21 @@ end
 function Board:setSpace(x, y, symbol)
     self.state[x][y] = symbol
 end
+
+---Gets all free spaces on the board
+---@return boardCoordinate[]
+function Board:getFreeSpaces()
+    ---@type boardCoordinate[]
+    local availableMoves = {}
+
+    -- find available moves (TODO could maybe move this into Board)
+    for x = 1, 3, 1 do
+        for y = 1, 3, 1 do
+            if self:spaceIsFree(x, y) then
+                table.insert(availableMoves, { x = x, y = y })
+            end
+        end
+    end
+
+    return availableMoves
+end
