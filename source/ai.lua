@@ -13,6 +13,7 @@ function ChooseAiMove(board, symbol)
     ---@type boardCoordinate[]
     local availableMoves = {}
 
+    -- find available moves (TODO could maybe move this into Board)
     for x = 1, 3, 1 do
         for y = 1, 3, 1 do
             if board:spaceIsFree(x, y) then
