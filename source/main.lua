@@ -222,7 +222,7 @@ local splashLetters <const> = {
 		239, 198,
 		237, 200,
 		232, 201,
-		229, 201,
+
 		225, 200
 	},
 	-- E
@@ -377,11 +377,7 @@ local state = GameState.SplashScreen;
 ---@field y boardDimension
 
 function FlipTurn()
-	if currentTurn == "x" then
-		currentTurn = "o"
-	else
-		currentTurn = "x"
-	end
+	currentTurn = currentTurn == "x" and "o" or "x"
 end
 
 function DrawBoard()
